@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      header {
+        background-color: black;
+        color: white;
+        text-align: center;
+        padding: 10px;
+      }
+      body {
+        background-color: lightgrey;
+      }
+      section {
+        border: 1px solid black;
+        background-color: white;
+        margin: 10px;
+        padding: 10px;
+      }
+      .loginhead {
+        text-align: center;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    </style>
+    <title>Fortune.com</title>
+  </head>
+  <body>
+    <header>
+      <h1>Fortune | A Social Media Platform</h1>
+    </header>
+    <main>
+      <section>
+        <div class="loginhead">
+          <h2>Login</h2>
+        </div>
+        <div>
+          <form action="/login" method="post">
+            <label>Enter a username: </label>
+            <input type="text" name="username" placeholder="Enter a username">
+            <br><br>
+            <label>Enter a password: </label>
+            <input type="password" name="password" placeholder="Enter a password">
+            <br><br>
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
