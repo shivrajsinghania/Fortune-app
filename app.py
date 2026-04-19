@@ -1,3 +1,4 @@
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from flask import Flask, render_template
@@ -72,11 +73,11 @@ app.secret_key = "mysecretkey"
 
 @app.route("/")
 def welcome():
-	return render_template("Fortune[welcome].html")
+	return render_template("welcome.html")
 
 @app.route("/signup")
 def signup():
-	return render_template("Fortune[signup].html")
+	return render_template("signup.html")
 
 @app.route("/submit", methods=["post"])
 def submit():
@@ -98,7 +99,7 @@ def submit():
 
 @app.route("/login-page")
 def loginpage():
-	return render_template("Fortune[login].html")
+	return render_template("login.html")
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -117,7 +118,7 @@ def login():
 @app.route("/dashboard")
 def dashboard():
 	if "user" in session:
-		return render_template("Fortune[dashboard].html", username=session["user"])
+		return render_template("dashboard.html", username=session["user"])
 	else:
 		return redirect("/login-page")
 
@@ -147,7 +148,7 @@ def profile():
 		cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id, ))
 		profile = cursor.fetchone()
 	
-	return render_template("Fortune[profile].html", profile=profile)
+	return render_template("profile.html", profile=profile)
 
 @app.route("/profile/update", methods=["POST"])
 def update_profile():
@@ -183,4 +184,5 @@ def update_profile():
 	return redirect("/profile")
 		
 
-app.run(debug=True, use_reloader = False)
+port = int(os.environ.get("PORT", 5000))
+app.run(host="0.0.0.0", port=port)
