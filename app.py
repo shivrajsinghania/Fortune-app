@@ -1,3 +1,4 @@
+from werkzeug.utils import secure_filename
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
@@ -33,7 +34,9 @@ def create_profile_table():
 	user_id INTEGER UNIQUE,
 	name TEXT,
 	bio TEXT,
-	links TEXT
+	links TEXT,
+	profile_pic TEXT,
+	shape TEXT
 	)
 	""")
 	conn.commit()
@@ -160,6 +163,20 @@ def update_profile():
 	name = request.form.get("name")
 	bio = request.form.get("bio")
 	links = request.form.get("links")
+	shape = request.form.get("shape")
+	file = request.files.get("profile_pic")
+	
+	filename = None
+	if file and file.filename != "":
+		filename = secure_filename(file.filename)
+		
+		ALLOWED = {"jpg", "png", "jpeg"}
+		ext = filename.split(".")[-1].lower()
+		
+		if ext not in ALLOWED:
+			return "Invalid file type"
+			
+		file.save("static/uploads/" + filename)
 	
 	#getting user_id
 	with sqlite3.connect("users.db") as conn:
@@ -177,12 +194,30 @@ def update_profile():
 		existing = cursor.fetchone()
 		
 		if existing:
-			cursor.execute("UPDATE profiles SET name=?, bio=?, links=? WHERE user_id=?", (name, bio, links, user_id))
+			if filename:
+				cursor.execute("""
+				UPDATE profiles 
+				SET name=?, bio=?, links=?, profile_pic=?, shape=? WHERE user_id=? 
+				""", (name, bio, links, filename, shape, user_id))
+			else:
+				cursor.execute("""
+				UPDATE profiles
+				SET name=?, bio=?, links=?, shape=? WHERE user_id=?
+				""", (name, bio, links, shape, user_id))
+				
 		else:
-			cursor.execute("INSERT INTO profiles(user_id, name, bio, links) VALUES(?, ?, ?, ?)", (user_id, name, bio, links))
+			cursor.execute("""
+			INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape)
+			VALUES (?, ?, ?, ?, ?, ?)
+			""", (user_id, name, bio, links, filename, shape))
 		conn.commit()
-	return redirect("/profile")
-		
+		return redirect("/profile")
 
+@app.route("/profile/edit")
+def edit_profile():
+	if "user" not in session:
+		return redirect("/login-page")
+	return render_template("edit_profile.html")
+	
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
