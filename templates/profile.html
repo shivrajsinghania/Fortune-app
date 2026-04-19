@@ -1,34 +1,258 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Fortune.com</title>
-  </head>
-  <body>
-    <!---navbar---->
-    <div class="navbar">
-      <a href="#">Share</a>
+<head>
+  <title>Fortune.com</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #fff;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 25px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .logo {
+      font-weight: bold;
+      font-size: 18px;
+      color: #4da6ff;
+    }
+
+    .nav-links a {
+      margin-left: 15px;
+      text-decoration: none;
+      color: #ccc;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+    }
+
+    /* MAIN */
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 30px 15px;
+    }
+
+    /* PROFILE CARD */
+    .profile-card {
+      width: 100%;
+      max-width: 380px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      transition: 0.3s;
+    }
+
+    .profile-card:hover {
+      transform: translateY(-5px);
+    }
+
+    /* PROFILE IMAGE */
+    .circle {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 3px solid #4da6ff;
+      padding: 3px;
+      object-fit: cover;
+      box-shadow: 0 0 25px rgba(77,166,255,0.6);
+    }
+
+    .square {
+      width: 110px;
+      height: 110px;
+      border-radius: 15px;
+      object-fit: cover;
+    }
+
+    /* NAME */
+    .name {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .bio {
+      font-size: 14px;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    /* WEBSITE */
+    .website {
+      display: block;
+      margin-top: 8px;
+      color: #4da6ff;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .website:hover {
+      color: #80c1ff;
+    }
+
+    /* STATS */
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat h4 {
+      font-size: 16px;
+    }
+
+    .stat p {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    /* BUTTONS */
+    .buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 10px 15px;
+      border-radius: 25px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #4da6ff, #0066ff);
+      color: white;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.1);
+      color: #ccc;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* POSTS GRID (future ready) */
+    .posts {
+      margin-top: 25px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .post {
+      height: 80px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo">Fortune</div>
+    <div class="nav-links">
+      <a href="#">Explore</a>
       <a href="#">Saved</a>
-      <a href="#">setting</a>
+      <a href="#">Settings</a>
     </div>
-    
-    <main>
-      <section>
-        <h3>Profile section</h3>
-        {% if profile %}
-        <p>Name: {{ profile[2] }}</p>
-        <p>Bio: {{ profile[3] }}</p>
-        <p>Links: {{ profile[4] }}</p>
+  </div>
+
+  <main>
+    <div class="profile-card">
+
+      {% if profile %}
+
+        {% if profile[5] %}
+          <img src="/static/uploads/{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
         {% else %}
-        <p>No profile found. Create one below.</p>
+          <img src="/static/default.png" class="circle">
         {% endif %}
-        
-        <form action="/profile/update" method="post">
-          <input type="text" name="name" placeholder="Enter your name:"><br><br>
-          <input type="text" name="bio" placeholder="Enter your bio:"><br><br>
-          <input type="text" name="links" placeholder="Enter links:"><br><br>
-          <button type="submit">Save Profile</button>
-        </form>
-      </section>
-    </main>
-  </body>
+
+        <div class="name">{{ profile[2] }}</div>
+        <div class="bio">{{ profile[3] }}</div>
+
+        {% if profile[4] %}
+          <a href="https://{{ profile[4] }}" target="_blank" class="website">{{ profile[4] }}</a>
+        {% endif %}
+
+        <!-- STATS (dummy now, dynamic later) -->
+        <div class="stats">
+          <div class="stat">
+            <h4>12</h4>
+            <p>Posts</p>
+          </div>
+          <div class="stat">
+            <h4>340</h4>
+            <p>Followers</p>
+          </div>
+          <div class="stat">
+            <h4>180</h4>
+            <p>Following</p>
+          </div>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="buttons">
+          <a href="/profile/edit" class="btn primary">Edit Profile</a>
+          <a href="#" class="btn secondary">Share</a>
+        </div>
+
+        <!-- POSTS GRID (future feature ready) -->
+        <div class="posts">
+          <div class="post"></div>
+          <div class="post"></div>
+          <div class="post"></div>
+          <div class="post"></div>
+          <div class="post"></div>
+          <div class="post"></div>
+        </div>
+
+      {% else %}
+
+        <img src="/static/default.png" class="circle">
+        <p>No profile yet!</p>
+
+      {% endif %}
+
+    </div>
+  </main>
+
+</body>
 </html>
