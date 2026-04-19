@@ -217,7 +217,25 @@ def update_profile():
 def edit_profile():
 	if "user" not in session:
 		return redirect("/login-page")
-	return render_template("edit_profile.html")
+		
+	username = session["user"]
+	
+	#get user id
+	with sqlite3.connect("users.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		user = cursor.fetchone()
+	if not user:
+		return "user is not in database"
+	user_id = user[0]
+	
+	#get profile
+	with sqlite3.connect("users.db") as conn:
+		cursor = conn.cursor()
+		cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id, ))
+		profile = cursor.fetchone()
+	
+	return render_template("edit_profile.html", profile=profile)
 	
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
