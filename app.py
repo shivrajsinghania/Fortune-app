@@ -142,10 +142,14 @@ def profile():
 		cursor = conn.cursor()
 		cursor.execute("SELECT id FROM users WHERE username=?", (username,))
 		user = cursor.fetchone()
-		
+	
+	if not user:
+		session.pop("user", None)
+		return redirect("/login-page")
+	
 	user_id = user[0]
 	
-	#geting profile
+	#getting profile
 	with sqlite3.connect("users.db") as conn:
 		cursor = conn.cursor()
 		cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id, ))
@@ -169,7 +173,7 @@ def update_profile():
 	filename = None
 	UPLOAD_FOLDER = "static/uploads"
 	
-	# Create folder if it doesn't exist (and it's not a file)
+	# Create folder if it doesn't exist
 	try:
 		if not os.path.exists(UPLOAD_FOLDER):
 			os.makedirs(UPLOAD_FOLDER)
@@ -195,6 +199,10 @@ def update_profile():
 		cursor = conn.cursor()
 		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
 		user = cursor.fetchone()
+	
+	if not user:
+		session.pop("user", None)
+		return redirect("/login-page")
 	
 	user_id = user[0]
 	
@@ -238,8 +246,11 @@ def edit_profile():
 		cursor = conn.cursor()
 		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
 		user = cursor.fetchone()
+	
 	if not user:
-		return "user is not in database"
+		session.pop("user", None)
+		return redirect("/login-page")
+	
 	user_id = user[0]
 	
 	#get profile
