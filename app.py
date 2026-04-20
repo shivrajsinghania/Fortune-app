@@ -54,7 +54,7 @@ def add_user(username, hashed_password):
 	except sqlite3.IntegrityError:
 		return "Username already exists"
 
-#Validating user for login
+#Validating user for login-
 def validate_user(username, password):
 	
 		with sqlite3.connect("users.db", timeout=10) as conn:
