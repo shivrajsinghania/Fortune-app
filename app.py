@@ -179,7 +179,7 @@ def update_profile():
 		if ext not in ALLOWED:
 			return "Invalid file type"
 			
-		#file.save(os.path.join(UPLOAD_FOLDER, filename))
+		file.save(os.path.join(UPLOAD_FOLDER, filename))
 	
 	#getting user_id
 	with sqlite3.connect("users.db") as conn:
