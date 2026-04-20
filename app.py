@@ -54,7 +54,7 @@ def add_user(username, hashed_password):
 	except sqlite3.IntegrityError:
 		return "Username already exists"
 
-#Validating user for login-
+#Validating user for login
 def validate_user(username, password):
 	
 		with sqlite3.connect("users.db", timeout=10) as conn:
@@ -155,66 +155,87 @@ def profile():
 
 @app.route("/profile/update", methods=["POST"])
 def update_profile():
-	if "user" not in session:
-		return redirect("/login-page")
-		
-	username = session["user"]
-	
-	name = request.form.get("name")
-	bio = request.form.get("bio")
-	links = request.form.get("links")
-	shape = request.form.get("shape")
-	file = request.files.get("profile_pic")
-	
-	filename = None
-	UPLOAD_FOLDER = "static/uploads"
-	os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-	
-	if file and file.filename != "":
-		filename = secure_filename(file.filename)
-		
-		ALLOWED = {"jpg", "png", "jpeg"}
-		ext = filename.split(".")[-1].lower()
-		
-		if ext not in ALLOWED:
-			return "Invalid file type"
+	try:
+		if "user" not in session:
+			return redirect("/login-page")
 			
-		file.save(os.path.join(UPLOAD_FOLDER, filename))
-	
-	#getting user_id
-	with sqlite3.connect("users.db") as conn:
-		cursor = conn.cursor()
-		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
-		user = cursor.fetchone()
-	
-	user_id = user[0]
-	
-	with sqlite3.connect("users.db") as conn:
-		cursor = conn.cursor()
+		username = session["user"]
 		
-		#checking if profile exists
-		cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id, ))
-		existing = cursor.fetchone()
+		name = request.form.get("name")
+		bio = request.form.get("bio")
+		links = request.form.get("links")
+		shape = request.form.get("shape")
+		file = request.files.get("profile_pic")
 		
-		if existing:
-			if filename:
-				cursor.execute("""
-				UPDATE profiles 
-				SET name=?, bio=?, links=?, profile_pic=?, shape=? WHERE user_id=? 
-				""", (name, bio, links, filename, shape, user_id))
+		# Debug: Log what we received
+		print(f"DEBUG: name={name}, bio={bio}, links={links}, shape={shape}, file={file}")
+		
+		filename = None
+		UPLOAD_FOLDER = "static/uploads"
+		os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+		
+		if file and file.filename != "":
+			filename = secure_filename(file.filename)
+			
+			ALLOWED = {"jpg", "png", "jpeg"}
+			ext = filename.split(".")[-1].lower()
+			
+			if ext not in ALLOWED:
+				return "Invalid file type"
+				
+			file.save(os.path.join(UPLOAD_FOLDER, filename))
+		
+		#getting user_id
+		with sqlite3.connect("users.db") as conn:
+			cursor = conn.cursor()
+			cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+			user = cursor.fetchone()
+		
+		if not user:
+			return "User not found in database"
+		
+		user_id = user[0]
+		
+		with sqlite3.connect("users.db") as conn:
+			cursor = conn.cursor()
+			
+			#checking if profile exists
+			cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id, ))
+			existing = cursor.fetchone()
+			
+			print(f"DEBUG: existing profile = {existing}")
+			
+			if existing:
+				if filename:
+					cursor.execute("""
+					UPDATE profiles 
+					SET name=?, bio=?, links=?, profile_pic=?, shape=? WHERE user_id=? 
+					""", (name, bio, links, filename, shape, user_id))
+					print("DEBUG: Updated profile with new photo")
+				else:
+					cursor.execute("""
+					UPDATE profiles
+					SET name=?, bio=?, links=?, shape=? WHERE user_id=?
+					""", (name, bio, links, shape, user_id))
+					print("DEBUG: Updated profile without photo")
+					
 			else:
 				cursor.execute("""
-				UPDATE profiles
-				SET name=?, bio=?, links=?, shape=? WHERE user_id=?
-				""", (name, bio, links, shape, user_id))
-				
-		else:
-			cursor.execute("""
-			INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape)
-			VALUES (?, ?, ?, ?, ?, ?)
-			""", (user_id, name, bio, links, filename, shape))
-		conn.commit()
+				INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape)
+				VALUES (?, ?, ?, ?, ?, ?)
+				""", (user_id, name, bio, links, filename, shape))
+				print("DEBUG: Inserted new profile")
+			
+			conn.commit()
+			print("DEBUG: Database committed successfully")
+		
 		return redirect("/profile")
+	
+	except Exception as e:
+		print(f"ERROR in update_profile: {str(e)}")
+		import traceback
+		traceback.print_exc()
+		return f"Error updating profile: {str(e)}"
 
 @app.route("/profile/edit")
 def edit_profile():
