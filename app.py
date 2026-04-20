@@ -167,6 +167,9 @@ def update_profile():
 	file = request.files.get("profile_pic")
 	
 	filename = None
+	UPLOAD_FOLDER = "static/uploads"
+	os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+	
 	if file and file.filename != "":
 		filename = secure_filename(file.filename)
 		
@@ -176,7 +179,7 @@ def update_profile():
 		if ext not in ALLOWED:
 			return "Invalid file type"
 			
-		file.save("static/uploads/" + filename)
+		file.save(os.path.join(UPLOAD_FOLDER, filename))
 	
 	#getting user_id
 	with sqlite3.connect("users.db") as conn:
