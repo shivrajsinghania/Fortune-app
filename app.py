@@ -6,6 +6,7 @@ from flask import Flask, render_template
 from flask import request
 from flask import redirect
 from flask import session
+from flask import flash
 
 #creating table
 def create_table():
@@ -15,6 +16,7 @@ def create_table():
 	cursor.execute("""
 	CREATE TABLE IF NOT EXISTS users(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	email TEXT,
 	username TEXT UNIQUE,
 	password TEXT
 	)
@@ -44,15 +46,15 @@ def create_profile_table():
 create_profile_table()
 
 #adding user for signup
-def add_user(username, hashed_password):
+def add_user(email, username, hashed_password):
 	try:
 		with sqlite3.connect("users.db", timeout=10) as conn:
 			cursor = conn.cursor()
-			cursor.execute("INSERT INTO users(username, password) VALUES(?, ?)", (username, hashed_password) )
+			cursor.execute("INSERT INTO users(email, username, password) VALUES(?, ?, ?)", (email, username, hashed_password) )
 			conn.commit()
 		return "success"
 	except sqlite3.IntegrityError:
-		return "Username already exists"
+		return "exists"
 
 #Validating user for login
 def validate_user(username, password):
@@ -65,7 +67,7 @@ def validate_user(username, password):
 			user = cursor.fetchone()
 			
 			if user:
-				stored_hash = user[2]     #password column
+				stored_hash = user[3]     #password column
 				return check_password_hash(stored_hash, password)
 			else:
 				return False
@@ -84,21 +86,34 @@ def signup():
 
 @app.route("/submit", methods=["post"])
 def submit():
+	email = request.form.get("email")
 	username = request.form.get("username")
 	password = request.form.get("password")
+	confirm_password = request.form.get("confirm_password")
 	
-	if not username or not password:
-		return "Invalid input"
+	if not email or "@" not in email:
+		flash("Please enter a valid email!", "error")
+		return redirect("/signup")
+	elif not username:
+		flash("Please create a valid username!", "error")
+		return redirect("/signup")
+	elif len(password) < 6:
+		flash("password must be at least 6 characters!", "error")
+		return redirect("/signup")
+	elif password != confirm_password:
+		flash("Please match the password!", "error")
+		return redirect("/signup")
 	
 	hashed_password = generate_password_hash(password)
 	
-	result = add_user(username, hashed_password)
+	result = add_user(email, username, hashed_password)
 	
 	if result == "success":
 		session["user"] = username
 		return redirect("/dashboard")
-	else:
-		return result
+	elif result == "exists":
+		flash("username already exists!", "error")
+		return redirect("/signup")
 
 @app.route("/login-page")
 def loginpage():
@@ -110,13 +125,15 @@ def login():
 	password = request.form.get("password")
 	
 	if not username or not password:
-		return "Invalid Input"
+		flash("Please enter usesrname and password!", "error")
+		return redirect("/login-page")
 		
 	if validate_user(username, password):
 		session["user"] = username
 		return redirect("/dashboard")
 	else:
-		return "Invalid Login Credential"
+		flash("Invalid login credentials!", "error")
+		return redirect("/login-page")
 
 @app.route("/dashboard")
 def dashboard():
@@ -142,14 +159,10 @@ def profile():
 		cursor = conn.cursor()
 		cursor.execute("SELECT id FROM users WHERE username=?", (username,))
 		user = cursor.fetchone()
-	
-	if not user:
-		session.pop("user", None)
-		return redirect("/login-page")
-	
+		
 	user_id = user[0]
 	
-	#getting profile
+	#geting profile
 	with sqlite3.connect("users.db") as conn:
 		cursor = conn.cursor()
 		cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id, ))
@@ -172,13 +185,7 @@ def update_profile():
 	
 	filename = None
 	UPLOAD_FOLDER = "static/uploads"
-	
-	# Create folder if it doesn't exist
-	try:
-		if not os.path.exists(UPLOAD_FOLDER):
-			os.makedirs(UPLOAD_FOLDER)
-	except Exception as e:
-		print(f"Error creating folder: {e}")
+	os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 	
 	if file and file.filename != "":
 		filename = secure_filename(file.filename)
@@ -189,20 +196,13 @@ def update_profile():
 		if ext not in ALLOWED:
 			return "Invalid file type"
 			
-		try:
-			file.save(os.path.join(UPLOAD_FOLDER, filename))
-		except Exception as e:
-			return f"Error saving file: {str(e)}"
+		file.save(os.path.join(UPLOAD_FOLDER, filename))
 	
 	#getting user_id
 	with sqlite3.connect("users.db") as conn:
 		cursor = conn.cursor()
 		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
 		user = cursor.fetchone()
-	
-	if not user:
-		session.pop("user", None)
-		return redirect("/login-page")
 	
 	user_id = user[0]
 	
@@ -214,25 +214,28 @@ def update_profile():
 		existing = cursor.fetchone()
 		
 		if existing:
+			name = name if name else existing[2]
+			bio = bio if bio else existing[3]
+			links = links if links else existing[4]
+			shape = shape if shape else existing[6]
+			
 			if filename:
-				cursor.execute("""
-				UPDATE profiles 
-				SET name=?, bio=?, links=?, profile_pic=?, shape=? WHERE user_id=? 
-				""", (name, bio, links, filename, shape, user_id))
+				profile_pic = filename
 			else:
-				cursor.execute("""
-				UPDATE profiles
-				SET name=?, bio=?, links=?, shape=? WHERE user_id=?
-				""", (name, bio, links, shape, user_id))
-				
+				profile_pic = existing[5]
+		
+			cursor.execute("""
+			UPDATE profiles 
+			SET name=?, bio=?, links=?, profile_pic=?, shape=? WHERE user_id=? 
+			""", (name, bio, links, profile_pic, shape, user_id))
+			
 		else:
 			cursor.execute("""
 			INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape)
 			VALUES (?, ?, ?, ?, ?, ?)
 			""", (user_id, name, bio, links, filename, shape))
 		conn.commit()
-	
-	return redirect("/profile")
+		return redirect("/profile")
 
 @app.route("/profile/edit")
 def edit_profile():
@@ -246,11 +249,8 @@ def edit_profile():
 		cursor = conn.cursor()
 		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
 		user = cursor.fetchone()
-	
 	if not user:
-		session.pop("user", None)
-		return redirect("/login-page")
-	
+		return "user is not in database"
 	user_id = user[0]
 	
 	#get profile
