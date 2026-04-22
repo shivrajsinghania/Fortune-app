@@ -1,5 +1,10 @@
 from werkzeug.utils import secure_filename
 import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static/uploads")
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from flask import Flask, render_template
@@ -172,31 +177,31 @@ def profile():
 
 @app.route("/profile/update", methods=["POST"])
 def update_profile():
-	if "user" not in session:
-		return redirect("/login-page")
-		
-	username = session["user"]
-	
-	name = request.form.get("name")
-	bio = request.form.get("bio")
-	links = request.form.get("links")
-	shape = request.form.get("shape")
-	file = request.files.get("profile_pic")
-	
-	filename = None
-	UPLOAD_FOLDER = "static/uploads"
-	os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-	
-	if file and file.filename != "":
-		filename = secure_filename(file.filename)
-		
-		ALLOWED = {"jpg", "png", "jpeg"}
-		ext = filename.split(".")[-1].lower()
-		
-		if ext not in ALLOWED:
-			return "Invalid file type"
-			
-		file.save(os.path.join(UPLOAD_FOLDER, filename))
+    if "user" not in session:
+        return redirect("/login-page")
+        
+    username = session["user"]
+    
+    name = request.form.get("name")
+    bio = request.form.get("bio")
+    links = request.form.get("links")
+    shape = request.form.get("shape")
+    file = request.files.get("profile_pic")
+    
+    filename = None
+    
+    if file and file.filename != "":
+        filename = secure_filename(file.filename)
+        
+        ALLOWED = {"jpg", "png", "jpeg"}
+        ext = filename.split(".")[-1].lower()
+        
+        if ext not in ALLOWED:
+            return "Invalid file type"
+            
+        file.save(os.path.join(UPLOAD_FOLDER, filename))   # ✅ works now
+    
+    # rest of your code stays SAME
 	
 	#getting user_id
 	with sqlite3.connect("users.db") as conn:
