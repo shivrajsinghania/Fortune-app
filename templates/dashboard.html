@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Fortune.com</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
       body {
         margin: 0;
@@ -76,9 +77,12 @@
     <div class="navbar">
       Fortune🚀
       <div class="logoutbtn">
-        <form action="/logout" method="post">
-          <button type="submit" class="logoutBtn">Logout!</button>
+        <form id="logoutForm" action="/logout" method="post">
+          <button type="button" class="logoutBtn" onclick="confirmLogout()">Logout!</button>
         </form>
+      </div>
+      <div id="loader" style=display:none;>
+        Logging out...
       </div>
     </div>
     
@@ -116,5 +120,20 @@
       <a href="#">📩<br>Send</a>
       <a href="/profile">👤<br>Profile</a>
     </div>
+    <script>
+      function confirmLogout() {
+        let result = confirm("Are you sure want to logout?");
+        if (result) {
+          showLoading();
+          
+          setTimeout(() => {
+            document.getElementById("logoutForm").submit();
+          }, 1000);
+        }
+      }
+      function showLoading() {
+        document.getElementById("loader").style.display = "block";
+      }
+    </script>
   </body>
 </html>
