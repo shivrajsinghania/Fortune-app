@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Edit Profile • Fortune</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
       margin: 0;
@@ -17,8 +17,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      padding: 20px;
+      height: 100vh;
     }
 
     /* CONTAINER */
@@ -51,10 +50,6 @@
       border: 3px solid #4da6ff;
       object-fit: cover;
       box-shadow: 0 0 13px rgba(77,166,255,0.6);
-    }
-
-    .preview img.square {
-      border-radius: 10px;
     }
 
     /* INPUTS */
@@ -91,7 +86,6 @@
     /* FILE INPUT */
     input[type="file"] {
       background: none;
-      padding: 5px 0;
     }
 
     /* BUTTON */
@@ -127,20 +121,6 @@
       color: #fff;
     }
 
-    .error {
-      color: #ff6b6b;
-      text-align: center;
-      margin-bottom: 15px;
-      font-size: 12px;
-    }
-
-    .success {
-      color: #51cf66;
-      text-align: center;
-      margin-bottom: 15px;
-      font-size: 12px;
-    }
-
   </style>
 </head>
 
@@ -153,9 +133,9 @@
     <!-- PROFILE PREVIEW -->
     <div class="preview">
       {% if profile and profile[5] %}
-          <img id="previewImg" src="/static/uploads/{{ profile[5] }}" class="{% if profile[6] %}{{ profile[6] }}{% else %}circle{% endif %}">
+          <img src="/static/uploads/{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
       {% else %}
-          <img id="previewImg" src="/static/default.png" class="circle">
+          <img src="/static/default.png" class="circle">
       {% endif %}
     </div>
 
@@ -163,30 +143,30 @@
 
       <div class="input-group">
         <label>Name</label>
-        <input type="text" name="name" placeholder="Enter your name" value="{% if profile and profile[2] %}{{ profile[2] }}{% endif %}">
+        <input type="text" name="name" value="{{ profile[2] if profile else ' ' }}">
       </div>
 
       <div class="input-group">
         <label>Bio</label>
-        <input type="text" name="bio" placeholder="Write something about you" value="{% if profile and profile[3] %}{{ profile[3] }}{% endif %}">
+        <input type="text" name="bio" value="{{ profile[3] if profile else ' ' }}">
       </div>
 
       <div class="input-group">
         <label>Website / Link</label>
-        <input type="text" name="links" placeholder="yourwebsite.com" value="{% if profile and profile[4] %}{{ profile[4] }}{% endif %}">
+        <input type="text" name="links" value="{{ profile[4] if profile else ' ' }}">
       </div>
 
       <div class="input-group">
         <label>Profile Shape</label>
         <select name="shape">
-          <option value="circle" {% if profile and profile[6] == 'circle' %}selected{% endif %}>Circle</option>
-          <option value="square" {% if profile and profile[6] == 'square' %}selected{% endif %}>Square</option>
+          <option value="circle">Circle</option>
+          <option value="square">Square</option>
         </select>
       </div>
 
       <div class="input-group">
         <label>Upload Profile Picture</label>
-        <input type="file" name="profile_pic" accept="image/png,image/jpeg,image/jpg" onchange="previewImage(event)">
+        <input type="file" name="profile_pic" onchange="previewImage(event)">
       </div>
 
       <button type="submit">Save Changes</button>
@@ -201,14 +181,7 @@
   <script>
     function previewImage(event) {
       const img = document.getElementById('previewImg');
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
+      img.src = URL.createObjectURL(event.target.files[0]);
     }
   </script>
 
