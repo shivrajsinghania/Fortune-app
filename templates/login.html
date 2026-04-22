@@ -24,7 +24,31 @@
         width: 100%;
         box-sizing: border-box;
       }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+      }
+      .success, .error {
+        animation: fade 0.3s ease-in;
+      }
+      @keyframes fade {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fortune.com</title>
   </head>
   <body>
@@ -36,13 +60,21 @@
         <div class="loginhead">
           <h2>Login</h2>
         </div>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+          {% if messages %}
+            {% for category, msg in messages %}
+              <p class="{{ category }}">{{ msg }}</p>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}  
+
         <div>
           <form action="/login" method="post">
             <label>Enter a username: </label>
-            <input type="text" name="username" placeholder="Enter a username">
+            <input type="text" name="username" placeholder="Enter a username" required>
             <br><br>
             <label>Enter a password: </label>
-            <input type="password" name="password" placeholder="Enter a password">
+            <input type="password" name="password" minlength="6" placeholder="Enter a password" required>
             <br><br>
             <button type="submit">Login</button>
           </form>
