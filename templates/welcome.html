@@ -1,47 +1,99 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Fortune.com</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
-      header {
-        background-color: black;
-        color: white;
-        text-align: center;
-        padding: 10px;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", sans-serif;
       }
+
       body {
-        background-color: lightgrey;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1e3a8a, #9333ea);
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
-      section {
-        border: 1px solid black;
-        background-color: white;
-        margin: 10px;
-        padding: 10px;
+
+      .container {
+        width: 100%;
+        max-width: 380px;
+        padding: 15px;
       }
-      .welcomehead {
+
+      .card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 25px;
         text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        color: white;
       }
-      .choicehead {
-        text-align: center;
+
+      h1 {
+        font-size: 22px;
+        margin-bottom: 10px;
+      }
+
+      h2 {
+        font-weight: 500;
+        margin-bottom: 20px;
+      }
+
+      .btn {
+        display: block;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 25px;
+        text-decoration: none;
+        color: white;
+        font-size: 14px;
+        transition: 0.3s;
+      }
+
+      .primary {
+        background: linear-gradient(135deg, #4da6ff, #0066ff);
+      }
+
+      .secondary {
+        background: rgba(255,255,255,0.2);
+      }
+
+      .btn:hover {
+        transform: scale(1.03);
+      }
+
+      p {
+        margin: 10px 0;
+        font-size: 13px;
+        opacity: 0.8;
       }
     </style>
-    <title>Fortune.com</title>
   </head>
+
   <body>
-    <header>
-      <h1>Fortune | A Social Media Platform</h1>
-    </header>
-    <main>
-      <section>
-        <div class="welcomehead">
-          <h2>A Grand Welcome To Fortune</h2>
-        </div>
-        <div class="choicehead">
-          <strong>Choose your choice:</strong>
-          <br><br>
-          <a href="/signup">Signup</a>
-          <p>OR</p>
-          <a href="/login-page">Login</a>
-      </section>
-    </main>
+
+    <div class="container">
+      <div class="card">
+
+        <h1>🚀 Fortune</h1>
+        <h2>Build your future. Connect. Grow.</h2>
+
+        <a href="/signup" class="btn primary">Create Account</a>
+
+        <p>OR</p>
+
+        <a href="/login-page" class="btn secondary">Login</a>
+
+      </div>
+    </div>
+
   </body>
 </html>
