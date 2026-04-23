@@ -1,3 +1,5 @@
+import os
+
 import cloudinary
 import cloudinary.uploader
 
@@ -9,15 +11,11 @@ cloudinary.config(
 
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
 import sqlite3
 from flask import Flask, render_template, request, redirect, session, flash
 
 # ================== PATH SETUP ==================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
 
 DB_PATH = os.path.join(BASE_DIR, "users.db")
 
@@ -191,8 +189,7 @@ def update_profile():
     links = request.form.get("links")
     shape = request.form.get("shape")
     file = request.files.get("profile_pic")
-
-    filename = None
+    
     image_url = None
 
     if file and file.filename != "":
