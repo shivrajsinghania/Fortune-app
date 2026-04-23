@@ -1,3 +1,12 @@
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUD_NAME"),
+    api_key=os.environ.get("API_KEY"),
+    api_secret=os.environ.get("API_SECRET")
+)
+
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -6,7 +15,6 @@ from flask import Flask, render_template, request, redirect, session, flash
 
 # ================== PATH SETUP ==================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "static/uploads")
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -185,6 +193,7 @@ def update_profile():
     file = request.files.get("profile_pic")
 
     filename = None
+    image_url = None
 
     if file and file.filename != "":
         filename = secure_filename(file.filename)
@@ -194,8 +203,9 @@ def update_profile():
 
         if ext not in allowed:
             return "Invalid file type"
-
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
+            
+        result = cloudinary.uploader.upload(file)
+        image_url = result["secure_url"]
 
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -215,8 +225,11 @@ def update_profile():
             bio = bio if bio else existing[3]
             links = links if links else existing[4]
             shape = shape if shape else existing[6]
-
-            profile_pic = filename if filename else existing[5]
+            
+            if image_url:
+            	profile_pic = image_url
+            else:
+            	profile_pic = existing[5]
 
             cursor.execute("""
                 UPDATE profiles
@@ -227,7 +240,7 @@ def update_profile():
             cursor.execute("""
                 INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (user_id, name, bio, links, filename, shape))
+            """, (user_id, name, bio, links, image_url if image_url else None, shape))
 
         conn.commit()
 
