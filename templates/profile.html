@@ -201,7 +201,7 @@
       {% if profile %}
 
         {% if profile and profile[5] %}
-          <img src="/static/uploads/{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
+          <img src="{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
         {% else %}
           <img src="/static/default.png" class="circle">
         {% endif %}
