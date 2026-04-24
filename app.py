@@ -222,11 +222,7 @@ def update_profile():
             bio = bio if bio else existing[3]
             links = links if links else existing[4]
             shape = shape if shape else existing[6]
-            
-            if image_url:
-            	profile_pic = image_url
-            else:
-            	profile_pic = existing[5]
+            profile_pic = image_url if image_url else existing[5]
 
             cursor.execute("""
                 UPDATE profiles
@@ -234,10 +230,12 @@ def update_profile():
                 WHERE user_id=?
             """, (name, bio, links, profile_pic, shape, user_id))
         else:
+            profile_pic = image_url if image_url else "default.png"
+            
             cursor.execute("""
                 INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (user_id, name, bio, links, image_url if image_url else None, shape))
+            """, (user_id, name, bio, links, profile_pic, shape))
 
         conn.commit()
 
