@@ -200,7 +200,7 @@
 
       {% if profile %}
 
-        {% if profile and profile[5] %}
+        {% if profile[5] and profile[5].startswith('http') %}
           <img src="{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
         {% else %}
           <img src="/static/default.png" class="circle">
