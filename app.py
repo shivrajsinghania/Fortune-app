@@ -201,7 +201,7 @@ def update_profile():
         if ext not in allowed:
             return "Invalid file type"
             
-        result = cloudinary.uploader.upload(file)
+        result = cloudinary.uploader.upload(file.stream)
         image_url = result["secure_url"]
 
     with sqlite3.connect(DB_PATH) as conn:
@@ -230,7 +230,7 @@ def update_profile():
                 WHERE user_id=?
             """, (name, bio, links, profile_pic, shape, user_id))
         else:
-            profile_pic = image_url if image_url else "default.png"
+            profile_pic = image_url if image_url else "/static/default.png"
             
             cursor.execute("""
                 INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape)
