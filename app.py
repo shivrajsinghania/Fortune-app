@@ -2,14 +2,11 @@ import os
 import cloudinary
 import cloudinary.uploader
 
-if os.environ.get("CLOUD_NAME"):
-    cloudinary.config(
-        cloud_name=os.environ.get("CLOUD_NAME"),
-        api_key=os.environ.get("API_KEY"),
-        api_secret=os.environ.get("API_SECRET")
-    )
-else:
-    print("⚠️ Cloudinary ENV NOT FOUND")
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUD_NAME"),
+    api_key=os.environ.get("API_KEY"),
+    api_secret=os.environ.get("API_SECRET")
+)
 
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -227,7 +224,7 @@ def update_profile():
         try:
             result = cloudinary.uploader.upload(
                 file,
-                upload_preset="my_preset"
+                resource_type="image"
             )
             image_url = result["secure_url"]
             public_id = result["public_id"]
