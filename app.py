@@ -225,7 +225,10 @@ def update_profile():
             print("Delete error:", e)
         	
         try:
-            result = cloudinary.uploader.upload(file)
+            result = cloudinary.uploader.upload(
+                file,
+                upload_preset="my_preset"
+            )
             image_url = result["secure_url"]
             public_id = result["public_id"]
         except Exception as e:
