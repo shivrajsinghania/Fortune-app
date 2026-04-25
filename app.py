@@ -2,11 +2,14 @@ import os
 import cloudinary
 import cloudinary.uploader
 
-cloudinary.config(
-    cloud_name=os.environ.get("CLOUD_NAME"),
-    api_key=os.environ.get("API_KEY"),
-    api_secret=os.environ.get("API_SECRET")
-)
+if os.environ.get("CLOUD_NAME"):
+    cloudinary.config(
+        cloud_name=os.environ.get("CLOUD_NAME"),
+        api_key=os.environ.get("API_KEY"),
+        api_secret=os.environ.get("API_SECRET")
+    )
+else:
+    print("⚠️ Cloudinary ENV NOT FOUND")
 
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -215,13 +218,20 @@ def update_profile():
         if ext not in allowed:
             return "Invalid file type"
             
-        if existing and existing[7]:
-        	cloudinary.uploader.destroy(existing[7])
+        try:
+            if existing and existing[7]:
+                cloudinary.uploader.destroy(existing[7])
+        except Exception as e:
+            print("Delete error:", e)
         	
-        result = cloudinary.uploader.upload(file)
-        image_url = result["secure_url"]
-        public_id = result["public_id"]
-
+        try:
+            result = cloudinary.uploader.upload(file)
+            image_url = result["secure_url"]
+            public_id = result["public_id"]
+        except Exception as e:
+            print("Upload Error:", e)
+            return "Upload failed"
+            
     with sqlite3.connect(DB_PATH) as conn:
     	cursor = conn.cursor()
     	
