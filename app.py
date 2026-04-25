@@ -16,7 +16,7 @@ from flask import Flask, render_template, request, redirect, session, flash
 # ================== PATH SETUP ==================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DB_PATH = os.path.join(BASE_DIR, "users.db")
+DB_PATH = "users.db"
 
 # ================== DATABASE ==================
 def create_table():
