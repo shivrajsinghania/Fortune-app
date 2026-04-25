@@ -1,5 +1,4 @@
 import os
-
 import cloudinary
 import cloudinary.uploader
 
@@ -47,7 +46,8 @@ def create_profile_table():
         bio TEXT,
         links TEXT,
         profile_pic TEXT,
-        shape TEXT
+        shape TEXT,
+        public_id TEXT
     )
     """)
     conn.commit()
@@ -191,19 +191,8 @@ def update_profile():
     file = request.files.get("profile_pic")
     
     image_url = None
-
-    if file and file.filename != "":
-        filename = secure_filename(file.filename)
-
-        allowed = {"jpg", "jpeg", "png"}
-        ext = filename.split(".")[-1].lower()
-
-        if ext not in allowed:
-            return "Invalid file type"
-            
-        result = cloudinary.uploader.upload(file.stream)
-        image_url = result["secure_url"]
-
+    public_id = None
+    
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM users WHERE username=?", (username,))
@@ -217,28 +206,48 @@ def update_profile():
         cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id,))
         existing = cursor.fetchone()
 
-        if existing:
-            name = name if name else existing[2]
-            bio = bio if bio else existing[3]
-            links = links if links else existing[4]
-            shape = shape if shape else existing[6]
-            profile_pic = image_url if image_url else existing[5]
+    if file and file.filename != "":
+        filename = secure_filename(file.filename)
 
-            cursor.execute("""
-                UPDATE profiles
-                SET name=?, bio=?, links=?, profile_pic=?, shape=?
-                WHERE user_id=?
-            """, (name, bio, links, profile_pic, shape, user_id))
-        else:
-            profile_pic = image_url if image_url else "/static/default.png"
+        allowed = {"jpg", "jpeg", "png"}
+        ext = filename.split(".")[-1].lower()
+
+        if ext not in allowed:
+            return "Invalid file type"
             
-            cursor.execute("""
-                INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (user_id, name, bio, links, profile_pic, shape))
+        if existing and existing[7]:
+        	cloudinary.uploader.destroy(existing[7])
+        	
+        result = cloudinary.uploader.upload(file{)
+        image_url = result["secure_url"]
+        public_id = result["public_id"]
 
-        conn.commit()
-
+    with sqlite3.connect(DB_PATH) as conn:
+    	cursor = conn.cursor()
+    	
+    	if existing:
+    	    name = name if name else existing[2]
+    	    bio = bio if bio else existing[3]
+    	    links = links if links else existing[4]
+    	    shape = shape if shape else existing[6]
+    	    profile_pic = image_url if image_url else existing[5]
+    	    final_public_id = public_id if image_url else existing[7]
+    	    
+    	    cursor.execute("""
+    	    UPDATE profiles
+    	    SET name=?, bio=?, links=?, profile_pic=?, shape=?, public_id=?
+    	    WHERE user_id=?
+    	    """, (name, bio, links, profile_pic, shape, final_public_id, user_id))
+    	else:
+    	       profile_pic = image_url if image_url else "/static/default.png"
+    	       
+    	       cursor.execute("""
+    	       INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape, public_id)
+    	       VALUES (?, ?, ?, ?, ?, ?, ?)
+    	       """, (user_id, name, bio, links, profile_pic, shape, public_id))
+    	       
+    	conn.commit()
+    	
     return redirect("/profile")
 
 @app.route("/profile/edit")
