@@ -218,7 +218,7 @@ def update_profile():
         if existing and existing[7]:
         	cloudinary.uploader.destroy(existing[7])
         	
-        result = cloudinary.uploader.upload(file{)
+        result = cloudinary.uploader.upload(file)
         image_url = result["secure_url"]
         public_id = result["public_id"]
 
