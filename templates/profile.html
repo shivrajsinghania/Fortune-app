@@ -166,18 +166,32 @@
       transform: scale(1.05);
     }
 
-    /* POSTS GRID (future ready) */
+    /* POSTS GRID */
     .posts {
       margin-top: 25px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
     }
 
-    .post {
-      height: 80px;
-      background: rgba(255,255,255,0.08);
+    .post-item {
+      width: 100%;
+      text-align: center;
+    }
+    
+    .post-item img {
+      width: 100%;
+      height: 90px;
+      object-fit: cover;
       border-radius: 10px;
+    }
+    
+    .post-item p {
+      font-size: 11px;
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
   </style>
@@ -194,7 +208,8 @@
       <a href="#">Settings</a>
     </div>
   </div>
-
+  
+  
   <main>
     <div class="profile-card">
 
@@ -216,7 +231,7 @@
         <!-- STATS (dummy now, dynamic later) -->
         <div class="stats">
           <div class="stat">
-            <h4>12</h4>
+            <h4>{{ post_count }}</h4>
             <p>Posts</p>
           </div>
           <div class="stat">
@@ -233,16 +248,17 @@
         <div class="buttons">
           <a href="/profile/edit" class="btn primary">Edit Profile</a>
           <a href="#" class="btn secondary">Share</a>
+          <a href="/create-post" class="btn primary">+ Post</a>
         </div>
 
-        <!-- POSTS GRID (future feature ready) -->
+        <!-- POSTS GRID -->
         <div class="posts">
-          <div class="post"></div>
-          <div class="post"></div>
-          <div class="post"></div>
-          <div class="post"></div>
-          <div class="post"></div>
-          <div class="post"></div>
+          {% for post in posts %}
+          <a  href="/post/{{ post[0] }}" class="post-item">
+            <img src="{{ post[2] }}">
+            <p style="font-size:10px; color:white;">{{ post[4] }}</p>
+          </a>
+          {% endfor %}
         </div>
 
       {% else %}
@@ -255,6 +271,8 @@
 
     </div>
   </main>
-
-</body>
+  <script>
+    
+  </script>
+  </body>
 </html>
