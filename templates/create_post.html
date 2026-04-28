@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fortune.com</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="background:#0f172a; color:white; text-align:center; padding:50px">
+    <h2>Create Post</h2>
+    <form action="/create-post" method="post" enctype="multipart/form-data">
+      <input type="file" name="image" required><br><br>
+      <input type="text" name="caption" placeholder="Write something..." style="padding:10px;"><br><br>
+      <button type="submit">Post</button>
+    </form>
+    <br>
+    <a href="/profile" onclick="goBack(event)" style="color:white;">Back</a>
+    <script>
+      function goBack(event) {
+        if (document.referrer) {
+          event.preventDefault();
+            history.back();
+        }
+      }
+    </script>
+  </body>
+</html>
