@@ -11,7 +11,7 @@ cloudinary.config(
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session, flash, jsonify, make_response
 
 # ================== PATH SETUP ==================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -54,6 +54,56 @@ def create_profile_table():
     conn.close()
 
 create_profile_table()
+
+def create_posts_table():
+	conn = sqlite3.connect(DB_PATH)
+	cursor = conn.cursor()
+	
+	cursor.execute("""
+	CREATE TABLE IF NOT EXISTS posts(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	user_id INTEGER,
+	image_url TEXT,
+	public_id TEXT,
+	caption TEXT
+	)
+	""")
+	conn.commit()
+	conn.close()
+create_posts_table()
+
+#creating likes table
+def create_likes_table():
+	conn = sqlite3.connect(DB_PATH)
+	cursor = conn.cursor()
+	
+	cursor.execute("""
+	CREATE TABLE IF NOT EXISTS likes(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	user_id INTEGER,
+	post_id INTEGER
+	)
+	""")
+	conn.commit()
+	conn.close()
+create_likes_table()
+
+#create comments table
+def create_comments_table():
+	conn = sqlite3.connect(DB_PATH)
+	cursor = conn.cursor()
+	
+	cursor.execute("""
+	CREATE TABLE IF NOT EXISTS comments(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	user_id INTEGER,
+	post_id INTEGER,
+	text TEXT
+	)
+	""")
+	conn.commit()
+	conn.close()
+create_comments_table()
 
 def add_user(email, username, hashed_password):
     try:
@@ -139,7 +189,10 @@ def login():
 
     if validate_user(username, password):
         session["user"] = username
-        return redirect("/dashboard")
+        
+        response = make_response(redirect("/dashboard"))
+        response.headers["Cache-Control"] = "no store"
+        return response
 
     flash("Invalid login credentials!", "error")
     return redirect("/login-page")
@@ -162,19 +215,32 @@ def profile():
 
     username = session["user"]
 
+    #getting user_id
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM users WHERE username=?", (username,))
         user = cursor.fetchone()
 
     user_id = user[0]
-
+    
+    #getting profile
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id,))
         profile = cursor.fetchone()
+    
+    #getting posts
+    with sqlite3.connect(DB_PATH) as conn:
+    	cursor = conn.cursor()
+    	cursor.execute("""
+    	SELECT * FROM posts
+    	WHERE user_id=?
+    	ORDER BY id DESC
+    	""", (user_id, ))
+    	posts = cursor.fetchall()
+    post_count = len(posts)
 
-    return render_template("profile.html", profile=profile)
+    return render_template("profile.html", profile=profile, posts=posts, post_count=post_count)
 
 # ================== UPDATE PROFILE ==================
 @app.route("/profile/update", methods=["POST"])
@@ -274,6 +340,230 @@ def edit_profile():
 
     return render_template("edit_profile.html", profile=profile)
 
+@app.route("/create-post")
+def create_post_page():
+	if "user" not in session:
+		return redirect("/login-page")		
+	return render_template("create_post.html")
+
+@app.route("/create-post", methods=["POST"])
+def create_post():
+	if "user" not in session:
+		return redirect("/login-page")
+	
+	username = session["user"]
+	caption = request.form.get("caption")
+	file = request.files.get("image")
+	
+	if not file or file.filename == "":
+		return "No file uploaded!"
+	
+	#get user_id
+	with sqlite3.connect(DB_PATH) as conn:
+		cursor = conn.cursor()
+		cursor.execute("SELECT id FROM users WHERE username=?", (username,))
+		user = cursor.fetchone()
+		
+	user_id = user[0]
+	
+	#uploading to cloudinary
+	result = cloudinary.uploader.upload(file)
+	image_url = result["secure_url"]
+	public_id = result["public_id"]
+	
+	#save to DB
+	with sqlite3.connect(DB_PATH) as conn:
+		cursor = conn.cursor()
+		cursor.execute("""
+		INSERT INTO posts(user_id, image_url, public_id, caption)
+		VALUES(?, ?, ?, ?)
+		""", (user_id, image_url, public_id, caption ))
+		conn.commit()
+		
+	return redirect("/profile")	
+
+@app.route("/post/<int:post_id>")
+def view_post(post_id):
+	if "user" not in session:
+		return redirect("/login-page")
+		
+	username = session["user"]
+	
+	with sqlite3.connect(DB_PATH) as conn:
+		cursor = conn.cursor()
+		
+		#getting user_id
+		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		user = cursor.fetchone()
+		user_id = user[0]
+		
+		#getting all posts
+		cursor.execute("""
+		SELECT posts.*, users.username,
+		EXISTS(
+		SELECT 1 FROM likes
+		WHERE likes.post_id = posts.id AND likes.user_id=?
+		) as liked_by_user,
+		(SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) as like_count,
+		(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count
+		FROM posts
+		JOIN users ON posts.user_id = users.id
+		ORDER BY posts.id DESC
+		""", (user_id, ))
+		
+		posts = cursor.fetchall()
+	
+	return render_template("view_post.html", posts=posts, current_id=post_id)
+
+@app.route("/delete-post/<int:post_id>", methods=["POST"])
+def delete_post(post_id):
+	if "user" not in session:
+		return redirect("/login-page")
+		
+	username = session["user"]
+	
+	with sqlite3.connect(DB_PATH) as conn:
+		cursor = conn.cursor()
+		
+		#getting user_id
+		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		user = cursor.fetchone()
+		user_id = user[0]
+		
+		#getting post
+		cursor.execute("SELECT * FROM posts WHERE id=?", (post_id, ))
+		post = cursor.fetchone()
+		
+		if not post:
+			return "Post not found!"
+			
+		#checking ownership
+		if post[1] != user_id:
+			return "Unauthorized!"
+			
+		#delete from cloudinary
+		try:
+		     cloudinary.uploader.destroy(post[3])
+		except Exception as e:
+			 print("Cloudinary delete failed:", e)
+		
+		#delete from DB(SQLite3)
+		cursor.execute("DELETE FROM posts WHERE id=?", (post_id, ))
+		conn.commit()
+		
+	return redirect("/profile")
+	
+@app.route("/feed")
+def feed():
+	if "user" not in session:
+		return redirect("/login-page")
+	
+	username = session["user"]
+	
+	with sqlite3.connect(DB_PATH) as conn:
+		cursor = conn.cursor()
+		
+		#getting user_id
+		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		user = cursor.fetchone()
+		user_id = user[0]
+		
+		cursor.execute("""
+		SELECT posts.*, users.username,
+		EXISTS(
+		SELECT 1 FROM likes
+		WHERE likes.post_id = posts.id AND likes.user_id=?
+		) as liked_by_user,
+		(SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) as like_count,
+		(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count
+		FROM posts
+		JOIN users ON posts.user_id = users.id
+		ORDER BY posts.id DESC
+		""", (user_id, ))
+		posts = cursor.fetchall()
+	
+	return render_template("feed.html", posts=posts)
+
+@app.route("/like/<int:post_id>", methods=["POST"])
+def like_post(post_id):
+	if "user" not in session:
+		return jsonify({"error": "login required"}), 403
+	
+	username = session["user"]
+	
+	with sqlite3.connect(DB_PATH) as conn:
+		cursor = conn.cursor()
+		
+		#getting user_id
+		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		user = cursor.fetchone()
+		user_id = user[0]
+		
+		#check already liked
+		cursor.execute("SELECT * FROM likes WHERE user_id=? AND post_id=?", (user_id, post_id))
+		existing = cursor.fetchone()
+		
+		if existing:
+			#unlike
+			cursor.execute("DELETE FROM likes WHERE user_id=? AND post_id=?", (user_id, post_id))
+			liked = False
+		else:
+			#like
+			cursor.execute("INSERT INTO likes(user_id, post_id) VALUES(?, ?)", (user_id, post_id))
+			liked = True
+		conn.commit()
+		
+		#get updated count
+		cursor.execute("SELECT COUNT(*) FROM likes WHERE post_id=?", (post_id, ))
+		count = cursor.fetchone()[0]
+		
+	return jsonify({"liked": liked , "likes": count})
+
+@app.route("/comments/<int:post_id>")
+def get_comments(post_id):
+	with sqlite3.connect(DB_PATH) as conn:
+		cursor = conn.cursor()
+		
+		cursor.execute("""
+		SELECT comments.text, users.username
+		FROM comments
+		JOIN users ON comments.user_id = users.id
+		WHERE comments.post_id = ?
+		ORDER BY comments.id DESC
+		""", (post_id, ))
+		
+		comments = cursor.fetchall()
+	
+	return jsonify(comments)
+
+@app.route("/add-comment/<int:post_id>", methods=["POST"])
+def add_comment(post_id):
+	if "user" not in session:
+		return jsonify({"error": "login required"}), 403
+		
+	username = session["user"]
+	text = request.json.get("text")
+	
+	if not text:
+		return jsonify({"error": "empty"}), 400
+	
+	with sqlite3.connect(DB_PATH) as conn:
+		cursor = conn.cursor()
+		
+		#getting user_id
+		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		user = cursor.fetchone()
+		user_id = user[0]
+		
+		#Inserting comments
+		cursor.execute("""
+		INSERT INTO comments(user_id, post_id, text)
+		VALUES(?, ?, ?)
+		""", (user_id, post_id, text))
+		conn.commit()
+		
+	return jsonify({"success": True, "username": username, "text": text})
+		
 # ================== RUN ==================
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
