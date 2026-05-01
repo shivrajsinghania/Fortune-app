@@ -114,11 +114,11 @@
     
     <!---Bottom navigation---->
     <div class="bottom-nav">
-      <a href="/feed">🏠<br>Home</a>
+      <a href="/feed" onclick="navigate(event, '/feed')">🏠<br>Home</a>
       <a href="#">📊<br>Stats</a>
-      <a href="/create-post">➕<br>Post</a>
+      <a href="/create-post" onclick="navigate(event, '/create-post')">➕<br>Post</a>
       <a href="">📩<br>Send</a>
-      <a href="/profile">👤<br>Profile</a>
+      <a href="/profile" onclick="navigate(event, '/profile')">👤<br>Profile</a>
     </div>
     <script>
       function confirmLogout() {
@@ -133,6 +133,15 @@
       }
       function showLoading() {
         document.getElementById("loader").style.display = "block";
+      }
+      window.onload = function () {
+        fetch("/check-session")
+        .then(res => res.json())
+        .then(data => {
+          if (!data.logged_in) {
+            window.location.href = "/login-page"
+          }
+        })
       }
       
     </script>
