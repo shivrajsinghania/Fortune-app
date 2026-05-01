@@ -140,7 +140,14 @@
       gap: 10px;
       justify-content: center;
     }
-
+    .caption {
+      font-size: 10px;
+      color: #ccc;
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .btn {
       padding: 10px 15px;
       border-radius: 25px;
@@ -216,7 +223,9 @@
       {% if profile %}
 
         {% if profile[5] and profile[5].startswith('http') %}
-          <img src="{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
+          <img src="{{ profile[5] }}"
+class="{{ profile[6] if profile[6] else 'circle' }}"
+style="object-fit: {{ profile[8] or 'cover' }}">
         {% else %}
           <img src="/static/default.png" class="circle">
         {% endif %}
@@ -255,8 +264,8 @@
         <div class="posts">
           {% for post in posts %}
           <a  href="/post/{{ post[0] }}" class="post-item">
-            <img src="{{ post[2] }}">
-            <p style="font-size:10px; color:white;">{{ post[4] }}</p>
+            <img src="{{ post[2] }}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;">
+            <p style="font-size:10px; color:white;" class="caption">{{ post[4] }}</p>
           </a>
           {% endfor %}
         </div>
