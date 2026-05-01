@@ -18,7 +18,6 @@
       align-items: center;
       height: 100vh;
     }
-    /* CONTAINER */
     .container {
       width: 100%;
       max-width: 380px;
@@ -33,7 +32,6 @@
       margin-bottom: 20px;
       font-weight: 500;
     }
-    /* INPUTS */
     .input-group {
       margin-bottom: 15px;
     }
@@ -46,6 +44,7 @@
     input {
       width: 100%;
       padding: 10px;
+      padding-right: 40px; /* space for icon */
       border-radius: 10px;
       border: none;
       outline: none;
@@ -56,7 +55,22 @@
     input::placeholder {
       color: #aaa;
     }
-    /* BUTTON */
+
+    /* ✅ Eye button clean style */
+    .eye-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      color: #aaa;
+    }
+    .eye-btn:hover {
+      color: #fff;
+    }
+
     button {
       width: 100%;
       padding: 12px;
@@ -128,26 +142,64 @@
       <form action="/submit" method="post">
         <div class="input-group">
           <label>Email: <span class="star-1">*</span></label>
-          <input type="email" name="email" placeholder="Enter email" required>
+          <input type="email" name="email" value="{{ old.email if old else '' }}" placeholder="Enter email" required>
         </div>
         <div class="input-group">
           <label>Username: <span class="star-2">*</span></label>
-          <input type="text" name="username" placeholder="Create a username" required>
+          <input type="text" name="username" value="{{ old.username if old else '' }}" placeholder="Create a username" required>
         </div>
+
+        <!-- PASSWORD -->
         <div class="input-group">
           <label>Password: <span class="star-3">*</span></label>
-          <input type="password" name="password" minlength="6" placeholder="Create a password" required>
+          <div style="position: relative;">
+            <input type="password" id="password" name="password" minlength="6" placeholder="Create a password" required>
+            <svg class="eye-btn" onclick="togglePassword('password', this)" viewBox="0 0 24 24" fill="none">
+              <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
         </div>
+
+        <!-- CONFIRM PASSWORD -->
         <div class="input-group">
           <label>Confirm Password <span class="star-4">*</span></label>
-          <input type="password" name="confirm_password" minlength="6" placeholder="Confirm your password" required>
+          <div style="position: relative;">
+            <input type="password" id="confirm_password" name="confirm_password" minlength="6" placeholder="Enter the same password" required>
+            <svg class="eye-btn" onclick="togglePassword('confirm_password', this)" viewBox="0 0 24 24" fill="none">
+              <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
         </div>
+
         <button type="submit">Next</button>
       </form>
-      <a href="/" class="back">← back</a>
+      <a onclick="goBack(event)" class="back">← back</a>
     </div>
+
     <script>
-    
+      function goBack(event) {
+        if (document.referrer) {
+          event.preventDefault();
+          history.back();
+        }
+      }
+
+      function togglePassword(id, el) {
+        let input = document.getElementById(id);
+
+        if (input.type === "password") {
+          input.type = "text";
+          el.innerHTML = `
+            <path d="M17.94 17.94A10.94 10.94 0 0112 19c-6 0-10-6-10-6a21.77 21.77 0 015.06-5.94M9.9 4.24A10.94 10.94 0 0112 5c6 0 10 6 10 6a21.77 21.77 0 01-4.06 5.94M1 1l22 22" stroke="currentColor" stroke-width="2"/>`;
+        } else {
+          input.type = "password";
+          el.innerHTML = `
+            <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>`;
+        }
+      }
     </script>
   </body>
 </html>
