@@ -133,9 +133,9 @@
     <!-- PROFILE PREVIEW -->
     <div class="preview">
       {% if profile and profile[5] %}
-          <img src="{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
+          <img id="previewImg" src="{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
       {% else %}
-          <img src="/static/default.png" class="circle">
+          <img id="previewImg" src="/static/default.png" class="circle">
       {% endif %}
     </div>
 
@@ -163,6 +163,14 @@
           <option value="square">Square</option>
         </select>
       </div>
+      
+      <div class="input-group">
+        <label>Fit Type</label>
+        <select name="fit_type">
+          <option value="cover" {% if profile and profile[8]=='cover' %}selected{% endif %}>Crop</option>
+          <option value="contain" {% if profile and profile[8]=='contain' %}selected{% endif %}>Full</option>
+        </select>
+      </div>
 
       <div class="input-group">
         <label>Upload Profile Picture</label>
@@ -173,7 +181,7 @@
 
     </form>
 
-    <a href="/profile" class="back">← Back to Profile</a>
+    <a class="back" onclick="goBack(event)">← Back to Profile</a>
 
   </div>
 
@@ -183,7 +191,12 @@
       const img = document.getElementById('previewImg');
       img.src = URL.createObjectURL(event.target.files[0]);
     }
+    function goBack(event) {
+      if (document.referrer) {
+        event.preventDefault();
+        history.back();
+      }
+    }
   </script>
-
 </body>
 </html>
