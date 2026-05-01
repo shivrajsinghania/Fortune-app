@@ -91,6 +91,8 @@
     flex: 1;
     overflow-y: auto;
     padding: 10px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
   .comment-input {
     display: flex;
@@ -164,17 +166,70 @@
     background: #1e293b;
     border-radius: 10px;
   }
+  .comment {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .comment {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .comment-top {
+    margin-bottom: 4px;
+  }
+  .username {
+    font-weight: 600;
+    font-size: 13px;
+    color: #cbd5f5;
+  }
+  .comment-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .text {
+    font-size: 14px;
+    color: white;
+    max-width: 70%;
+    word-wrap: break-word;
+  }
+  .comment-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .icon-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+  }
+  .icon {
+    width: 18px;
+    height: 18px;
+    stroke: #aaa;
+    fill: none;
+    stroke-width: 2;
+  }
+  .icon-btn:hover .icon {
+    stroke: white;
+  }
+  .delete-icon {
+    stroke: #ff4d4d;
+  }
+  .comment {
+    transition: opacity 0.2s ease;
+  }
   </style>
 </head>
 <body>
   <div class="container">
     {% for post in posts %}
     <div class="total-post {% if post[0] == current_id %}active{% endif %}">
-      <p><strong>@{{ post[5] }}</strong></p>
-      <img src="{{ post[2] }}" class="img">
+      <p><strong>@{{ post[6] }}</strong></p>
+      <img src="{{ post[2] }}" style="width:100%; height:auto; object-fit: {{ post[5] or 'contain' }}; border-radius:10px; display:block;">
       <div class="actions-row">
         <div class="left-actions">
-          <button class="like-btn {% if post[6] %}liked{% endif %}" onclick="likePost({{ post[0] }}, this)">
+          <button class="like-btn {% if post[7] %}liked{% endif %}" onclick="likePost({{ post[0] }}, this)">
             <svg class="heart" viewBox="0 0 24 24">
               <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
               9 5 10.5 6.5 12 8 
@@ -183,14 +238,14 @@
               19 15.8 12 21 12 21z"/>
             </svg>
           </button>
-          <span class="like-count">{{ post[7] }}</span>
+          <span class="like-count">{{ post[8] }}</span>
           
           <button class="comment-btn" onclick="openComments({{ post[0] }})">
             <svg viewBox="0 0 24 24" class="comment-icon">
               <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
             </svg>
           </button>
-          <span class="comment-count">{{ post[8] }}</span>
+          <span class="comment-count">{{ post[9] }}</span>
         </div>
         <div class="right-actions">
           <form method="POST" action="/delete-post/{{ post[0] }}" onsubmit="return confirmDelete()">
@@ -219,8 +274,12 @@
       </div>
     </div>
   <script>
-    function confirmDelete() {
-      return confirm("Are your sure want to delete this post?");
+    function confirmDeleteComment(commentId) {
+      let confirmBox = confirm("Are you sure want to delete?")
+      
+      if (confirmBox) {
+        deleteComment(commentId);
+      }
     }
     function likePost(postId, btn) {
       fetch(`/like/${postId}`, {
@@ -245,17 +304,46 @@
       currentPostId = postId;
       document.getElementById("commentModal").style.display = "flex";
         
-      history.pushState({modal: true}, "");
+      if (!history.state || !history.state.modal) {
+          history.pushState({modal: true}, "");
+      }
+        
       fetch(`/comments/${postId}`)
       .then(res => res.json())
       .then(data => {
         let html = "";
         data.forEach(c => {
           html += `
-          <div class="comment">
-          <div class="username">@${c[1]}</div>
-          <div class="text">${c[0]}</div>
-          <div class="comment-actions">Reply • Like</div>
+          <div class="comment" data-id="${c[0]}">
+          <div class="comment-top">
+          <span class="username">@${c[2]}</span>
+          </div>
+          <div class="comment-body">
+          <span class="text">${c[1]}</span>
+          <div class="comment-actions">
+          <button class="icon-btn">
+          <svg viewBox="0 0 24 24" class="icon">
+          <path d="M10 9V5l-7 7 7 7v-4c5 0 8 1 11 5-1-7-4-11-11-11z"/>
+          </svg>
+          </button>
+          <button class="icon-btn">
+          <svg viewBox="0 0 24 24" class="icon">
+          <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
+          9 5 10.5 6.5 12 8 
+          13.5 6.5 15 5 17.5 5 
+          21.5 5 23.5 9.5 21.5 12.7 
+          19 15.8 12 21 12 21z"/>
+          </svg>
+          </button>
+          ${parseInt(c[3]) === parseInt(currentUserId) ? `
+          <button class="icon-btn delete" onclick="confirmDeleteComment(${c[0]})">
+          <svg viewBox="0 0 24 24" class="icon delete-icon">
+          <path d="M6 6l12 12M18 6l-12 12"/>
+          </svg>
+          </button>
+          ` : ""}
+          </div>
+          </div>
           </div>`;
         });
         document.getElementById("commentsList").innerHTML = html;
@@ -269,6 +357,9 @@
     function closeComments() {
       document.body.classList.remove("modal-open");
       document.getElementById("commentModal").style.display = "none";
+      if (history.state && history.state.modal) {
+          history.back();
+      }
     }
     function sendComment() {
       let text = document.getElementById("commentText").value;
@@ -282,10 +373,41 @@
       .then(data => {
         if (data.success) {
           let newComment = `
-          <div class="comment">
-          <div class="username">@${data.username}</div>
-          <div class="text">${data.text}</div>
+          <div class="comment" data-id="${data.comment_id}">
+          <div class="comment-top">
+          <span class="username">@${data.username}</span>
+          </div>
+          <div class="comment-body">
+          <span class="text">${data.text}</span>
+          <div class="comment-actions">
+          <!-- reply -->
+          <button class="icon-btn">
+          <svg viewBox="0 0 24 24" class="icon">
+          <path d="M10 9V5l-7 7 7 7v-4c5 0 8 1 11 5-1-7-4-11-11-11z"/>
+          </svg>
+          </button>
+          <!-- like -->
+          <button class="icon-btn">
+          <svg viewBox="0 0 24 24" class="icon">
+          <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
+          9 5 10.5 6.5 12 8 
+          13.5 6.5 15 5 17.5 5 
+          21.5 5 23.5 9.5 21.5 12.7 
+          19 15.8 12 21 12 21z"/>
+          </svg>
+          </button>
+          <!-- delete -->
+          ${parseInt(data.user_id) === parseInt(currentUserId) ? `
+          <button class="icon-btn delete" onclick="confirmDeleteComment(${data.comment_id})">
+          <svg viewBox="0 0 24 24" class="icon delete-icon">
+          <path d="M6 6l12 12M18 6l-12 12"/>
+          </svg>
+          </button>
+          ` : ""}
+          </div>
+          </div>
           </div>`;
+          
           document.getElementById("commentsList").innerHTML = newComment + document.getElementById("commentsList").innerHTML;
           document.getElementById("commentText").value = "";
             
@@ -305,9 +427,42 @@
     window.onload = function() {
       let activePost = document.querySelector(".active");
       if (activePost) {
-        activePost.scrollIntoView({ behavior: "auto", block: "start" });
+        activePost.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     };
+
+    let currentUserId = {{ user_id or 0 }};
+    
+    function confirmDelete() {
+      return confirm("Are you sure want to delete this post?");
+    }
+    
+    function deleteComment(commentId) {
+      fetch(`/delete-comment/${commentId}`, {
+        method: "POST"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          let el = document.querySelector(`.comment[data-id="${commentId}"]`);
+          if (el) {
+            el.style.opacity = "0";
+            setTimeout(() => {
+              el.remove();
+              
+              let countElement = document.querySelector(
+                `.comment-btn[onclick="openComments(${currentPostId})"]`
+              ).nextElementSibling;
+              
+              countElement.innerText = Math.max(
+                0,
+                parseInt(countElement.innerText) - 1
+              );
+            }, 200);
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>
