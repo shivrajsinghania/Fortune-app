@@ -1,25 +1,93 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Fortune.com</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  </head>
-  <body style="background:#0f172a; color:white; text-align:center; padding:50px">
+<head>
+  <title>Create Post</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 25px;
+      border: none;
+      background: linear-gradient(135deg, #4da6ff, #0066ff);
+      color: white;
+      cursor: pointer;
+    }
+
+    img {
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+      max-height: 200px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
     <h2>Create Post</h2>
     <form action="/create-post" method="post" enctype="multipart/form-data">
-      <input type="file" name="image" required><br><br>
-      <input type="text" name="caption" placeholder="Write something..." style="padding:10px;"><br><br>
+      <input type="file" name="image" required onchange="preview(event)">
+      <img id="previewImg">
+      <textarea name="caption" placeholder="Write caption..."></textarea>
+      <select name="fit_type">
+        <option value="cover">Crop (Fill)</option>
+        <option value="contain">Full Image</option>
+      </select>
+      <select disabled>
+        <option>Filters (Coming Soon)</option>
+      </select>
       <button type="submit">Post</button>
     </form>
-    <br>
-    <a href="/profile" onclick="goBack(event)" style="color:white;">Back</a>
-    <script>
-      function goBack(event) {
-        if (document.referrer) {
-          event.preventDefault();
-            history.back();
-        }
+    <a onclick="goBack(event)" style="display:block; text-align:center; margin-top:10px; color:#aaa;">
+      ← Back
+    </a>
+  </div>
+  
+  
+  <script>
+    function preview(event) {
+      document.getElementById("previewImg").src =
+      URL.createObjectURL(event.target.files[0]);
+    }
+    function goBack(event) {
+      if (document.referrer) {
+        event.preventDefault();
+        history.back();
       }
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
