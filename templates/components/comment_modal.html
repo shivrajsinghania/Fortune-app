@@ -1,0 +1,13 @@
+<div id="commentModal" class="modal" onclick="outsideClick(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="drag-handle"></div>
+        <h2>Comments</h2>
+        
+        <div id="commentsList"></div>
+        
+        <div class="comment-input">
+          <input type="text" id="commentText" placeholder="Write a comment...">
+          <button onclick="sendComment()">Send</button>
+        </div>
+      </div>
+    </div>
