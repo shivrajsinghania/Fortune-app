@@ -204,7 +204,7 @@ def submit():
         return redirect("/dashboard")
 
     flash("Username already exists!", "error")
-    return render_template("signup.html", old=request.form)
+    return render_template("signup.html")
 
 @app.route("/login-page")
 def loginpage():
@@ -294,7 +294,7 @@ def profile():
 def update_profile():
     if "user" not in session:
         return redirect("/login-page")
-
+    
     username = session["user"]
 
     name = request.form.get("name")
@@ -363,13 +363,20 @@ def update_profile():
     	       
     	conn.commit()
     	
-    return redirect("/profile")
+    return jsonify({
+    "name": name,
+    "bio": bio,
+    "links": links,
+    "profile_pic": profile_pic,
+    "shape": shape,
+    "fit_type": fit_type
+    })
 
 @app.route("/profile/edit")
 def edit_profile():
     if "user" not in session:
-        return redirect("/login-page")
-
+        return redirect("/login-page")    
+    
     username = session["user"]
 
     with sqlite3.connect(DB_PATH) as conn:
@@ -430,7 +437,7 @@ def create_post():
 		""", (user_id, image_url, public_id, caption, fit_type ))
 		conn.commit()
 		
-	return redirect("/profile")	
+	return redirect("/profile")
 
 @app.route("/post/<int:post_id>")
 def view_post(post_id):
@@ -487,7 +494,7 @@ def delete_post(post_id):
 		
 		if not post:
 			return "Post not found!"
-			
+		
 		#checking ownership
 		if post[1] != user_id:
 			return "Unauthorized!"
