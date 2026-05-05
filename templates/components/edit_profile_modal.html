@@ -1,0 +1,56 @@
+<div id="editModal" class="modal" onclick="closeEditModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="drag-bar"></div>
+    <h2>Edit Profile</h2>
+
+    <!-- PROFILE PREVIEW -->
+    <div class="preview">
+      {% if profile and profile[5] %}
+          <img id="previewImg" src="{{ profile[5] }}" class="{{ profile[6] if profile[6] else 'circle' }}">
+      {% else %}
+          <img id="previewImg" src="/static/default.png" class="circle">
+      {% endif %}
+    </div>
+    <div class="modal-body">
+    <form id="editForm">
+
+      <div class="input-group">
+        <label>Name</label>
+        <input type="text" name="name" placeholder="Enter your name" value="{{ profile[2] if profile else '' }}">
+      </div>
+
+      <div class="input-group">
+        <label>Bio</label>
+        <input type="text" name="bio" placeholder="Write bio..." value="{{ profile[3] if profile else '' }}">
+      </div>
+
+      <div class="input-group">
+        <label>Website / Link</label>
+        <input type="text" name="links" placeholder="Add links" value="{{ profile[4] if profile else '' }}">
+      </div>
+
+      <div class="input-group">
+        <label>Profile Shape</label>
+        <select name="shape">
+          <option value="circle">Circle</option>
+          <option value="square">Square</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label>Fit Type</label>
+        <select name="fit_type">
+          <option value="cover" {% if profile and profile[8]=='cover' %}selected{% endif %}>Crop</option>
+          <option value="contain" {% if profile and profile[8]=='contain' %}selected{% endif %}>Full</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Upload Profile Picture</label>
+        <input type="file" name="profile_pic" onchange="previewImage(event)">
+      </div>
+      <button type="submit">Save Changes</button>
+    </form>
+    </div>
+  </div>
+</div>
