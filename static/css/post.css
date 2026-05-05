@@ -1,0 +1,211 @@
+/* ===== GLOBAL ===== */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* ===== LIKE BUTTON ===== */
+.heart {
+  width: 26px;
+  height: 26px;
+  fill: transparent;
+  stroke: white;
+  stroke-width: 2;
+  transition: 0.25s ease;
+}
+
+.like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.like-btn.liked .heart {
+  fill: #ff3040;
+  stroke: #ff3040;
+  filter: drop-shadow(0 0 6px #ff3040);
+  transform: scale(1.1);
+}
+
+/* ===== COMMENT BUTTON ===== */
+.comment-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.comment-icon {
+  width: 24px;
+  height: 24px;
+  fill: transparent;
+  stroke: white;
+  stroke-width: 2;
+  transition: 0.3s;
+}
+
+.comment-btn:hover .comment-icon {
+  filter: drop-shadow(0 0 6px white);
+}
+
+/* ===== MODAL ===== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  align-items: flex-end;
+}
+
+.modal-content {
+  background: #1e293b;
+  height: 85%;
+  width: 100%;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  touch-action: none;
+  will-change: transform;
+}
+
+#commentsList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* ===== COMMENT INPUT ===== */
+.comment-input {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.comment-input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  border: none;
+}
+
+.comment-input button {
+  background: #4da6ff;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 20px;
+  color: white;
+}
+
+/* ===== COMMENT STRUCTURE ===== */
+.comment {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: opacity 0.2s ease;
+}
+
+.comment-top {
+  margin-bottom: 4px;
+}
+
+.username {
+  font-weight: 600;
+  font-size: 13px;
+  color: #cbd5f5;
+}
+
+.comment-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.text {
+  font-size: 14px;
+  color: white;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+/* ===== COMMENT ACTIONS ===== */
+.comment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  stroke: #aaa;
+  fill: none;
+  stroke-width: 2;
+}
+
+.icon-btn:hover .icon {
+  stroke: white;
+}
+
+/* ===== DELETE BUTTON (POST + COMMENT) ===== */
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.delete-icon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #ff4d4d;
+  stroke-width: 2;
+}
+
+.delete-btn:hover .delete-icon {
+  stroke: #ff0000;
+}
+
+/* ===== POST ACTION ROW ===== */
+.actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.left-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.right-actions {
+  display: flex;
+  align-items: center;
+}
+.modal-content h2 {
+  text-align: center;
+  padding: 12px;
+  margin: 0;
+}
+
+#commentsList {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.drag-handle {
+  width: 40px;
+  height: 5px;
+  background: #aaa;
+  border-radius: 10px;
+  margin: 8px auto;
+}
