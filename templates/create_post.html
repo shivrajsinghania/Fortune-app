@@ -58,7 +58,7 @@
 <body>
   <div class="card">
     <h2>Create Post</h2>
-    <form action="/create-post" method="post" enctype="multipart/form-data">
+    <form id="postForm" enctype="multipart/form-data">
       <input type="file" name="image" required onchange="preview(event)">
       <img id="previewImg">
       <textarea name="caption" placeholder="Write caption..."></textarea>
@@ -78,6 +78,40 @@
   
   
   <script>
+    document.getElementById("postForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      
+      try {
+        const response = await fetch("/create-post", {
+          method: "POST",
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        // not logged in
+        if (data.redirect) {
+          window.location.href = data.redirect;
+          return;
+        }
+        
+        //success
+        if (data.success) {
+          history.replaceState(null, "", "/feed");
+          window.location.replace("/feed");
+          
+        } else {
+          alert(data.message || "upload failed!");
+        }
+        
+      }
+      catch(error) {
+        alert("upload failed!");
+      }
+    });
+    
     function preview(event) {
       document.getElementById("previewImg").src =
       URL.createObjectURL(event.target.files[0]);
