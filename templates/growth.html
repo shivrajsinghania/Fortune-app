@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fortune/growth-page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, Sans-Serif;
+        background-color: #f4f6f9;
+      }
+      .main {
+        padding: 20px;
+        padding-bottom: 70px;
+      }
+      .Welcome {
+        font-size: 22px;
+        margin-bottom: 20px;
+      }
+      .cards {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .card {
+        background-color: white;
+        color: black;
+        padding: 20px;
+        margin: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        flex: 1 1 40%;
+      }
+      .card:hover {
+        transform: scale(1.02);
+      }
+    </style>
+  </head>
+  <body>
+    {% include "components/navbar.html" %}
+    
+    <div class="main">
+      <div class="Welcome">
+        <strong>Welcome {{username}}👋!</strong>
+      </div>
+      
+      <div class="cards">
+        <div class="card">
+          <h3>Total post</h3>
+          <p>0</p>
+        </div>
+        <div class="card">
+          <h3>Followers</h3>
+          <p>0</p>
+        </div>
+        <div class="card">
+          <h3>Earnings</h3>
+          <p>$0.00</p>
+        </div>
+        <div class="card">
+          <h3>Engagement</h3>
+          <p>0%</p>
+        </div>
+      </div>
+    </div>
+    {% include "components/navigation.html" %}
+  </body>
+</html>
