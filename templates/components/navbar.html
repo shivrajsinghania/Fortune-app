@@ -1,0 +1,44 @@
+<div class="top-navbar">
+
+  <div class="nav-left">
+    <div class="logo-dot"></div>
+    <span class="logo-text">Fortune</span>
+  </div>
+
+  <div class="nav-right">
+
+    <button class="nav-btn">
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.8"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="M20 20L17 17"></path>
+
+      </svg>
+    </button>
+
+    <button class="nav-btn">
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.8"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M18 8A6 6 0 006 8C6 15 3 17 3 17H21S18 15 18 8"></path>
+        <path d="M13.73 21A2 2 0 0110.27 21"></path>
+
+      </svg>
+    </button>
+
+    <a href="/profile" class="profile-avatar">
+      {{  username[0].upper() if username else "u" }}
+    </a>
+
+  </div>
+
+</div>
