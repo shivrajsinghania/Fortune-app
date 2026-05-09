@@ -2,7 +2,9 @@
 body.modal-open {
   overflow: hidden;
 }
-
+body {
+  margin: 0;
+}
 /* ===== LIKE BUTTON ===== */
 .heart {
   width: 26px;
@@ -22,7 +24,7 @@ body.modal-open {
 .like-btn.liked .heart {
   fill: #ff3040;
   stroke: #ff3040;
-  filter: drop-shadow(0 0 6px #ff3040);
+  filter: drop-shadow(0 0 6px);
   transform: scale(1.1);
 }
 
