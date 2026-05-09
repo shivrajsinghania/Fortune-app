@@ -1,0 +1,49 @@
+<!---Bottom navigation---->
+<div class="bottom-nav">
+
+  <a href="/feed" onclick="navigate(event, '/feed')" class="{% if current_page == 'feed' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+      <path d="M3 10.5L12 3L21 10.5"/>
+      <path d="M5.5 9.5V20H18.5V9.5"/>
+      <path d="M9 14H15"/>
+    </svg>
+    <span>Feed</span>
+  </a>
+
+  <a href="/growth" onclick="navigate(event, '/growth')" class="{% if current_page == 'growth' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+      <path d="M4 16L9 11L13 15L20 8"/>
+      <path d="M20 8V13"/>
+      <path d="M20 8H15"/>
+    </svg>
+    <span>Growth</span>
+  </a>
+
+  <a href="/create-post" onclick="navigate(event, '/create-post')" class=" create-nav {% if current_page == 'create-post' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+      <rect x="4" y="4" width="16" height="16" rx="5"/>
+      <path d="M12 8V16"/>
+      <path d="M8 12H16"/>
+    </svg>
+    <span>Create</span>
+  </a>
+
+  <a href="#" class="{% if current_page == 'network' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+      <circle cx="6" cy="12" r="2"/>
+      <circle cx="18" cy="7" r="2"/>
+      <circle cx="18" cy="17" r="2"/>
+      <path d="M8 12H16"/>
+      <path d="M16.5 8.5L16.5 15.5"/>
+    </svg>
+    <span>Network</span>
+  </a>
+
+  <a href="/profile" onclick="navigate(event, '/profile')" class="{% if current_page == 'profile' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="nav-icon">
+      <circle cx="12" cy="8" r="3.5"/>
+      <path d="M5 19C6.5 16.5 9 15 12 15C15 15 17.5 16.5 19 19"/>
+    </svg>
+    <span>Profile</span>
+  </a>
+</div>
