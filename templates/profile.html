@@ -4,6 +4,8 @@
   <title>Fortune.com</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile_modal.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
   <style>
     * {
       margin: 0;
@@ -52,155 +54,6 @@
       justify-content: center;
       padding: 30px 15px;
     }
-
-    /* PROFILE CARD */
-    .profile-card {
-      width: 100%;
-      max-width: 380px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 20px;
-      padding: 25px;
-      text-align: center;
-      backdrop-filter: blur(15px);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-      transition: 0.3s;
-    }
-
-    .profile-card:hover {
-      transform: translateY(-5px);
-    }
-
-    /* PROFILE IMAGE */
-    .circle {
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      border: 3px solid #4da6ff;
-      padding: 3px;
-      object-fit: cover;
-      box-shadow: 0 0 25px rgba(77,166,255,0.6);
-    }
-
-    .square {
-      width: 110px;
-      height: 110px;
-      border-radius: 15px;
-      object-fit: cover;
-    }
-
-    /* NAME */
-    .name {
-      font-size: 20px;
-      font-weight: 600;
-      margin-top: 10px;
-    }
-
-    .bio {
-      font-size: 14px;
-      color: #aaa;
-      margin-top: 5px;
-    }
-
-    /* WEBSITE */
-    .website {
-      display: block;
-      margin-top: 8px;
-      color: #4da6ff;
-      font-size: 13px;
-      text-decoration: none;
-    }
-
-    .website:hover {
-      color: #80c1ff;
-    }
-
-    /* STATS */
-    .stats {
-      display: flex;
-      justify-content: space-around;
-      margin: 20px 0;
-    }
-
-    .stat {
-      text-align: center;
-    }
-
-    .stat h4 {
-      font-size: 16px;
-    }
-
-    .stat p {
-      font-size: 12px;
-      color: #aaa;
-    }
-
-    /* BUTTONS */
-    .buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-    .caption {
-      font-size: 10px;
-      color: #ccc;
-      margin-top: 4px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .btn {
-      padding: 10px 15px;
-      border-radius: 25px;
-      font-size: 13px;
-      border: none;
-      cursor: pointer;
-      transition: 0.3s;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .primary {
-      background: linear-gradient(135deg, #4da6ff, #0066ff);
-      color: white;
-    }
-
-    .secondary {
-      background: rgba(255,255,255,0.1);
-      color: #ccc;
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
-    }
-
-    /* POSTS GRID */
-    .posts {
-      margin-top: 25px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 10px;
-    }
-
-    .post-item {
-      width: 100%;
-      text-align: center;
-    }
-    
-    .post-item img {
-      width: 100%;
-      height: 90px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-    
-    .post-item p {
-      font-size: 11px;
-      margin-top: 4px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
   </style>
 </head>
 
@@ -210,9 +63,16 @@
   <div class="navbar">
     <div class="logo">Fortune</div>
     <div class="nav-links">
-      <a href="#">Explore</a>
-      <a href="#">Saved</a>
+      <a href="#">saved</a>
       <a href="#">Settings</a>
+      <div class="logoutbtn">
+        <form id="logoutForm" action="/logout" method="post">
+          <a onclick="confirmLogout()">Logout!</a>
+        </form>
+      </div>
+      <div id="loader" style=display:none;>
+        Logging out...
+      </div>
     </div>
   </div>
   
@@ -257,7 +117,6 @@ style="object-fit: {{ profile[8] or 'cover' }}">
         <div class="buttons">
           <button onclick="openEditModal()" class="btn primary">Edit Profile</button>
           <a href="#" class="btn secondary">Share</a>
-          <a href="/create-post" class="btn primary">+ Post</a>
         </div>
 
         <!-- POSTS GRID -->
@@ -279,246 +138,33 @@ style="object-fit: {{ profile[8] or 'cover' }}">
       {% endif %}
 
     </div>
+    {% include "components/navigation.html" %}
   </main>
   {% include "components/edit_profile_modal.html" %}
   <script>
-    // =========================
-// MODAL ELEMENTS
-// =========================
-const modal = document.getElementById("editModal");
-const modalContent = modal.querySelector(".modal-content");
-const modalBody = modal.querySelector(".modal-body");
-
-
-// =========================
-// APP STATE
-// =========================
-let appState = {
-  modalOpen: false
-};
-
-
-// =========================
-// RENDER FUNCTION
-// =========================
-function render() {
-
-  if (appState.modalOpen) {
-    modal.style.display = "flex";
-    document.body.classList.add("modal-open");
-
-    // reset swipe position
-    modalContent.style.transform = "translateY(0)";
-  } else {
-    modal.style.display = "none";
-    document.body.classList.remove("modal-open");
+//Logout logic -
+function confirmLogout() {
+  let result = confirm("Are you sure want to logout?");
+  if (result) {
+    showLoading();
+    setTimeout(() => {
+      document.getElementById("logoutForm").submit();
+    }, 1000);
   }
 }
-
-
-// =========================
-// OPEN MODAL
-// =========================
-function openEditModal() {
-
-  // prevent duplicate history stacking
-  if (appState.modalOpen) return;
-
-  appState.modalOpen = true;
-
-  history.pushState(
-    { modalOpen: true },
-    "",
-    "#edit"
-  );
-
-  render();
+function showLoading() {
+  document.getElementById("loader").style.display = "block";
 }
-
-
-// =========================
-// CLOSE MODAL
-// =========================
-function closeEditModal() {
-
-  // close through history
-  if (appState.modalOpen) {
-    history.back();
-  }
-}
-
-
-// =========================
-// HISTORY CONTROL
-// =========================
-window.addEventListener("popstate", (event) => {
-
-  appState.modalOpen =
-    !!(event.state && event.state.modalOpen);
-
-  render();
-});
-
-
-// =========================
-// PROFILE FORM SUBMIT
-// =========================
-document
-  .getElementById("editForm")
-  .addEventListener("submit", async function (e) {
-
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    const response = await fetch("/profile/update", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await response.json();
-
-    // live UI update
-    updateProfileUI(data);
-
-    // close modal
-    closeEditModal();
-});
-
-
-// =========================
-// UPDATE PROFILE UI
-// =========================
-function updateProfileUI(data) {
-
-  // name
-  document.querySelector(".name").textContent =
-    data.name;
-
-  // bio
-  document.querySelector(".bio").textContent =
-    data.bio;
-
-  // image
-  const img =
-    document.querySelector(".profile-card img");
-
-  img.src = data.profile_pic;
-  img.className = data.shape;
-  img.style.objectFit = data.fit_type;
-
-
-  // =========================
-  // LINKS
-  // =========================
-  let linkEl =
-    document.querySelector(".website");
-
-  if (data.links && data.links.trim() !== "") {
-
-    // create if not exists
-    if (!linkEl) {
-
-      linkEl = document.createElement("a");
-
-      linkEl.className = "website";
-
-      document
-        .querySelector(".profile-card")
-        .appendChild(linkEl);
+window.onload = function () {
+  fetch("/check-session")
+  .then(res => res.json())
+  .then(data => {
+    if (!data.logged_in) {
+      window.location.href = "/login-page"
     }
-
-    linkEl.href =
-      "https://" + data.links;
-
-    linkEl.textContent =
-      data.links;
-
-    linkEl.style.display = "block";
-
-  } else {
-
-    // remove if empty
-    if (linkEl) {
-      linkEl.remove();
-    }
-  }
+  })
 }
-
-
-// =========================
-// IMAGE PREVIEW
-// =========================
-function previewImage(event) {
-
-  const img =
-    document.getElementById("previewImg");
-
-  img.src =
-    URL.createObjectURL(event.target.files[0]);
-}
-
-
-// =========================
-// SWIPE TO CLOSE
-// =========================
-let startY = 0;
-let currentY = 0;
-let isDragging = false;
-
-
-// TOUCH START
-modalContent.addEventListener("touchstart", (e) => {
-
-  // allow swipe only when scroll is top
-  if (modalBody.scrollTop > 0) return;
-
-  startY = e.touches[0].clientY;
-
-  isDragging = true;
-});
-
-
-// TOUCH MOVE
-modalContent.addEventListener("touchmove", (e) => {
-
-  if (!isDragging) return;
-
-  currentY = e.touches[0].clientY;
-
-  let diff = currentY - startY;
-
-  // only downward swipe
-  if (diff > 0) {
-
-    // resistance effect
-    modalContent.style.transform =
-      `translateY(${diff * 0.9}px)`;
-  }
-});
-
-
-// TOUCH END
-modalContent.addEventListener("touchend", () => {
-
-  if (!isDragging) return;
-
-  isDragging = false;
-
-  let diff = currentY - startY;
-
-  // close threshold
-  if (diff > 120) {
-
-    closeEditModal();
-
-  } else {
-
-    // snap back
-    modalContent.style.transform =
-      "translateY(0)";
-  }
-});
   </script>
+  <script src="{{ url_for('static', filename='js/edit_profile_modal.js') }}"></script>
   </body>
 </html>
