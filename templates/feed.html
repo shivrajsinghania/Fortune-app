@@ -4,25 +4,25 @@
     <title>Fortune.com</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/post.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
     <style>
       body {
+        margin: 0;
         background: #0f172a;
         font-family: Sans-Serif;
         color: white;
       }
-      h2 {
-        text-align: center;
-      }
       .feed {
-        margin: 20px;
-        padding: 10px;
+        margin: 7px;
+        padding: 7px;
         background: #1e293b;
         border-radius: 10px;
       }
     </style>
   </head>
   <body>
-    <h2>Feed</h2>
+    {% include "components/navbar.html" %}
     
     {% for post in posts %}
     <div class="feed">
@@ -30,6 +30,7 @@
       {% include "components/post.html" %}
     </div>
     {% endfor %}
+    {% include "components/navigation.html" %}
     {% include "components/comment_modal.html" %}
     <script>
       let currentUserId = {{ user_id or 0 }};
