@@ -157,7 +157,7 @@ def no_cache(response):
 @app.route("/")
 def welcome():
     if "user" in session:
-    	return redirect("/dashboard")
+    	return redirect("/feed")
     	
     return render_template("welcome.html")
 
@@ -201,7 +201,7 @@ def submit():
         session["user"] = username
         session["user_id"] = user[0]
         
-        return redirect("/dashboard")
+        return redirect("/feed")
 
     flash("Username already exists!", "error")
     return render_template("signup.html")
@@ -209,7 +209,7 @@ def submit():
 @app.route("/login-page")
 def loginpage():
     if "user" in session:
-    	return redirect("/dashboard")
+    	return redirect("/feed")
     	
     return render_template("login.html")
 
@@ -232,7 +232,7 @@ def login():
         session["user"] = username
         session["user_id"] = user[0]
         
-        return redirect("/dashboard")
+        return redirect("/feed")
 
     flash("Invalid login credentials!", "error")
     return redirect("/login-page")
@@ -242,13 +242,6 @@ def check_session():
 	if "user" in session:
 		return jsonify({"logged_in": True})
 	return jsonify({"logged_in": False})
-
-@app.route("/dashboard")
-def dashboard():
-    if "user" not in session:
-        return redirect("/login-page")
-
-    return render_template("dashboard.html", username=session["user"])
 
 @app.route("/logout", methods=["POST"])
 def logout():
@@ -287,7 +280,7 @@ def profile():
     	posts = cursor.fetchall()
     post_count = len(posts)
 
-    return render_template("profile.html", profile=profile, posts=posts, post_count=post_count)
+    return render_template("profile.html", profile=profile, posts=posts, post_count=post_count, current_page="profile", username=username)
 
 # ================== UPDATE PROFILE ==================
 @app.route("/profile/update", methods=["POST"])
@@ -372,72 +365,71 @@ def update_profile():
     "fit_type": fit_type
     })
 
-@app.route("/profile/edit")
-def edit_profile():
-    if "user" not in session:
-        return redirect("/login-page")    
-    
-    username = session["user"]
-
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id FROM users WHERE username=?", (username,))
-        user = cursor.fetchone()
-
-    if not user:
-        return "User not found"
-
-    user_id = user[0]
-
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id,))
-        profile = cursor.fetchone()
-
-    return render_template("edit_profile.html", profile=profile)
-
-@app.route("/create-post")
-def create_post_page():
-	if "user" not in session:
-		return redirect("/login-page")		
-	return render_template("create_post.html")
-
-@app.route("/create-post", methods=["POST"])
+@app.route("/create-post", methods=["GET", "POST"])
 def create_post():
 	if "user" not in session:
-		return redirect("/login-page")
-	
+		
+		if request.method == "GET":
+			return redirect("/login-page")
+			
+		return jsonify({
+		"success": False,
+		"redirect": "/login-page"
+		}), 401
+		
+	if request.method == "GET":
+		return render_template("create_post.html", current_page="create_post")
+		
 	username = session["user"]
+	
 	caption = request.form.get("caption")
 	file = request.files.get("image")
 	fit_type = request.form.get("fit_type", "cover")
 	
 	if not file or file.filename == "":
-		return "No file uploaded!"
-	
-	#get user_id
+		return jsonify({
+		"success": False,
+		"message": "No file uploaded!"
+		})
+		
+	#getting user id
 	with sqlite3.connect(DB_PATH) as conn:
 		cursor = conn.cursor()
-		cursor.execute("SELECT id FROM users WHERE username=?", (username,))
+		
+		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
 		user = cursor.fetchone()
+		
+	if not user:
+		return jsonify({
+		"success": False,
+		"message": "User not found!"
+		})
 		
 	user_id = user[0]
 	
-	#uploading to cloudinary
+	#cloudinary upload
 	result = cloudinary.uploader.upload(file)
 	image_url = result["secure_url"]
 	public_id = result["public_id"]
 	
-	#save to DB
+	#save post
 	with sqlite3.connect(DB_PATH) as conn:
 		cursor = conn.cursor()
-		cursor.execute("""
-		INSERT INTO posts(user_id, image_url, public_id, caption, fit_type)
-		VALUES(?, ?, ?, ?, ?)
-		""", (user_id, image_url, public_id, caption, fit_type ))
-		conn.commit()
 		
-	return redirect("/profile")
+		cursor.execute("""
+		INSERT INTO posts(
+		user_id, image_url, public_id, caption, fit_type
+		)
+		VALUES(?, ?, ?, ?, ?)
+		""", (user_id, image_url, public_id, caption, fit_type
+		))
+		
+		conn.commit()
+	
+	return jsonify({
+	"success": True
+	})
+	
 
 @app.route("/post/<int:post_id>")
 def view_post(post_id):
@@ -540,7 +532,7 @@ def feed():
 		""", (user_id, ))
 		posts = cursor.fetchall()
 	
-	return render_template("feed.html", posts=posts, user_id=user_id)
+	return render_template("feed.html", posts=posts, user_id=user_id, current_page="feed", username=username)
 
 @app.route("/like/<int:post_id>", methods=["POST"])
 def like_post(post_id):
@@ -658,7 +650,13 @@ def delete_comment(comment_id):
 		
 	return jsonify({"success": True})
 
-
+@app.route("/growth")
+def growth():
+	if "user" not in session:
+		return redirect("/login-page")
+	
+	return render_template("growth.html", current_page="growth", username=session["user"])
+	
 # ================== RUN ==================
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
