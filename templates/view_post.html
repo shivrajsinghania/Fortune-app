@@ -19,7 +19,7 @@
   }
   .img {
     width: 100%;
-    max-height: 60vh;
+    max-height: 440px;
     object-fit: cover;
     border-radius: 12px;
   }
@@ -30,8 +30,8 @@
     text-align: center;
   }
   .total-post {
-    margin: 10px;
-    padding: 5px;
+    margin: 7px;
+    padding: 7px;
     background: #1e293b;
     border-radius: 10px;
   }
@@ -48,7 +48,7 @@
   </div>
   {% include "components/comment_modal.html" %}
   <script>
-    let currentUserId = {{ user_id or 0 }};
+    const currentUserId = {{ user_id }};
     window.onload = function() {
       let activePost = document.querySelector(".active");
       if (activePost) {
