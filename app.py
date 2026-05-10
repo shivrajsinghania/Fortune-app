@@ -10,21 +10,26 @@ cloudinary.config(
 
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import psycopg2
 from flask import Flask, render_template, request, redirect, session, flash, jsonify, make_response
 
 # ================== PATH SETUP ==================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DB_PATH = "users.db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # ================== DATABASE ==================
+
+def get_connection():
+	return psycopg2.connect(DATABASE_URL)
+	
 def create_table():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.cursor()
+    
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         email TEXT,
         username TEXT UNIQUE,
         password TEXT
@@ -36,12 +41,12 @@ def create_table():
 create_table()
 
 def create_profile_table():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS profiles(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER UNIQUE,
         name TEXT,
         bio TEXT,
@@ -52,23 +57,23 @@ def create_profile_table():
     )
     """)
 
-    # ✅ Add column ONLY if not exists (SAFE)
-    try:
-        cursor.execute("ALTER TABLE profiles ADD COLUMN fit_type TEXT DEFAULT 'cover'")
-    except:
-        pass
+    # ✅ Add column ONLY if not exists
+    cursor.execute("""
+    ALTER TABLE profiles
+    ADD COLUMN IF NOT EXISTS fit_type TEXT DEFAULT 'cover'
+    """)
 
     conn.commit()
     conn.close()
 create_profile_table()
 
 def create_posts_table():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS posts(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER,
         image_url TEXT,
         public_id TEXT,
@@ -77,10 +82,10 @@ def create_posts_table():
     """)
 
     # ✅ Safe add column
-    try:
-        cursor.execute("ALTER TABLE posts ADD COLUMN fit_type TEXT DEFAULT 'cover'")
-    except:
-        pass
+    cursor.execute("""
+    ALTER TABLE posts
+    ADD COLUMN IF NOT EXISTS fit_type TEXT DEFAULT 'cover'
+    """)
 
     conn.commit()
     conn.close()
@@ -88,12 +93,12 @@ create_posts_table()
 
 #creating likes table
 def create_likes_table():
-	conn = sqlite3.connect(DB_PATH)
+	conn = get_connection()
 	cursor = conn.cursor()
 	
 	cursor.execute("""
 	CREATE TABLE IF NOT EXISTS likes(
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	id SERIAL PRIMARY KEY,
 	user_id INTEGER,
 	post_id INTEGER
 	)
@@ -104,12 +109,12 @@ create_likes_table()
 
 #create comments table
 def create_comments_table():
-	conn = sqlite3.connect(DB_PATH)
+	conn = get_connection()
 	cursor = conn.cursor()
 	
 	cursor.execute("""
 	CREATE TABLE IF NOT EXISTS comments(
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	id SERIAL PRIMARY KEY,
 	user_id INTEGER,
 	post_id INTEGER,
 	text TEXT
@@ -121,21 +126,24 @@ create_comments_table()
 
 def add_user(email, username, hashed_password):
     try:
-        with sqlite3.connect(DB_PATH, timeout=10) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO users(email, username, password) VALUES(?, ?, ?)",
+            cursor.execute("""
+            INSERT INTO users(email, username, password)
+            VALUES(%s, %s, %s)
+            """,
                 (email, username, hashed_password)
             )
             conn.commit()
+            
         return "success"
-    except sqlite3.IntegrityError:
+    except:
         return "exists"
 
 def validate_user(username, password):
-    with sqlite3.connect(DB_PATH, timeout=10) as conn:
+    with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username=?", (username,))
+        cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
         user = cursor.fetchone()
 
         if user:
@@ -192,10 +200,10 @@ def submit():
     result = add_user(email, username, hashed_password)
 
     if result == "success":
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_connection() as conn:
         	cursor = conn.cursor()
         	
-        	cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+        	cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
         	user = cursor.fetchone()
         
         session["user"] = username
@@ -223,10 +231,10 @@ def login():
         return redirect("/login-page")
 
     if validate_user(username, password):
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_connection() as conn:
         	cursor = conn.cursor()
         	
-        	cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+        	cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
         	user = cursor.fetchone()
         	
         session["user"] = username
@@ -256,25 +264,25 @@ def profile():
     username = session["user"]
 
     #getting user_id
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM users WHERE username=?", (username,))
+        cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
         user = cursor.fetchone()
 
     user_id = user[0]
     
     #getting profile
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id,))
+        cursor.execute("SELECT * FROM profiles WHERE user_id=%s", (user_id,))
         profile = cursor.fetchone()
     
     #getting posts
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
     	cursor = conn.cursor()
     	cursor.execute("""
     	SELECT * FROM posts
-    	WHERE user_id=?
+    	WHERE user_id=%s
     	ORDER BY id DESC
     	""", (user_id, ))
     	posts = cursor.fetchall()
@@ -300,17 +308,17 @@ def update_profile():
     image_url = None
     public_id = None
     
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM users WHERE username=?", (username,))
+        cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
         user = cursor.fetchone()
 
     user_id = user[0]
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM profiles WHERE user_id=?", (user_id,))
+        cursor.execute("SELECT * FROM profiles WHERE user_id=%s", (user_id,))
         existing = cursor.fetchone()
 
     if file and file.filename != "":
@@ -329,7 +337,7 @@ def update_profile():
         image_url = result["secure_url"]
         public_id = result["public_id"]
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
     	cursor = conn.cursor()
     	
     	if existing:
@@ -343,15 +351,15 @@ def update_profile():
     	    
     	    cursor.execute("""
     	    UPDATE profiles
-    	    SET name=?, bio=?, links=?, profile_pic=?, shape=?, public_id=?, fit_type=?
-    	    WHERE user_id=?
+    	    SET name=%s, bio=%s, links=%s, profile_pic=%s, shape=%s, public_id=%s, fit_type=%s
+    	    WHERE user_id=%s
     	    """, (name, bio, links, profile_pic, shape, final_public_id, fit_type, user_id))
     	else:
     	       profile_pic = image_url if image_url else "/static/default.png"
     	       
     	       cursor.execute("""
     	       INSERT INTO profiles(user_id, name, bio, links, profile_pic, shape, public_id, fit_type)
-    	       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    	       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     	       """, (user_id, name, bio, links, profile_pic, shape, public_id, fit_type))
     	       
     	conn.commit()
@@ -393,10 +401,10 @@ def create_post():
 		})
 		
 	#getting user id
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
-		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
 		user = cursor.fetchone()
 		
 	if not user:
@@ -413,14 +421,14 @@ def create_post():
 	public_id = result["public_id"]
 	
 	#save post
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		cursor.execute("""
 		INSERT INTO posts(
 		user_id, image_url, public_id, caption, fit_type
 		)
-		VALUES(?, ?, ?, ?, ?)
+		VALUES(%s, %s, %s, %s, %s)
 		""", (user_id, image_url, public_id, caption, fit_type
 		))
 		
@@ -438,11 +446,11 @@ def view_post(post_id):
 		
 	username = session["user"]
 	
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		#getting user_id
-		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
 		user = cursor.fetchone()
 		user_id = user[0]
 		
@@ -451,13 +459,13 @@ def view_post(post_id):
 		SELECT posts.*, users.username,
 		EXISTS(
 		SELECT 1 FROM likes
-		WHERE likes.post_id = posts.id AND likes.user_id=?
+		WHERE likes.post_id = posts.id AND likes.user_id=%s
 		) as liked_by_user,
 		(SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) as like_count,
 		(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count
 		FROM posts
 		JOIN users ON posts.user_id = users.id
-		WHERE posts.user_id = ?
+		WHERE posts.user_id = %s
 		ORDER BY posts.id DESC
 		""", (user_id, user_id))
 		
@@ -472,16 +480,16 @@ def delete_post(post_id):
 		
 	username = session["user"]
 	
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		#getting user_id
-		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
 		user = cursor.fetchone()
 		user_id = user[0]
 		
 		#getting post
-		cursor.execute("SELECT * FROM posts WHERE id=?", (post_id, ))
+		cursor.execute("SELECT * FROM posts WHERE id=%s", (post_id, ))
 		post = cursor.fetchone()
 		
 		if not post:
@@ -498,7 +506,7 @@ def delete_post(post_id):
 			 print("Cloudinary delete failed:", e)
 		
 		#delete from DB(SQLite3)
-		cursor.execute("DELETE FROM posts WHERE id=?", (post_id, ))
+		cursor.execute("DELETE FROM posts WHERE id=%s", (post_id, ))
 		conn.commit()
 		
 	return redirect("/profile")
@@ -510,11 +518,11 @@ def feed():
 	
 	username = session["user"]
 	
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		#getting user_id
-		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
 		user = cursor.fetchone()
 		user_id = user[0]
 		
@@ -522,7 +530,7 @@ def feed():
 		SELECT posts.*, users.username,
 		EXISTS(
 		SELECT 1 FROM likes
-		WHERE likes.post_id = posts.id AND likes.user_id=?
+		WHERE likes.post_id = posts.id AND likes.user_id=%s
 		) as liked_by_user,
 		(SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) as like_count,
 		(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count
@@ -541,30 +549,30 @@ def like_post(post_id):
 	
 	username = session["user"]
 	
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		#getting user_id
-		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
 		user = cursor.fetchone()
 		user_id = user[0]
 		
 		#check already liked
-		cursor.execute("SELECT * FROM likes WHERE user_id=? AND post_id=?", (user_id, post_id))
+		cursor.execute("SELECT * FROM likes WHERE user_id=%s AND post_id=%s", (user_id, post_id))
 		existing = cursor.fetchone()
 		
 		if existing:
 			#unlike
-			cursor.execute("DELETE FROM likes WHERE user_id=? AND post_id=?", (user_id, post_id))
+			cursor.execute("DELETE FROM likes WHERE user_id=%s AND post_id=%s", (user_id, post_id))
 			liked = False
 		else:
 			#like
-			cursor.execute("INSERT INTO likes(user_id, post_id) VALUES(?, ?)", (user_id, post_id))
+			cursor.execute("INSERT INTO likes(user_id, post_id) VALUES(%s, %s)", (user_id, post_id))
 			liked = True
 		conn.commit()
 		
 		#get updated count
-		cursor.execute("SELECT COUNT(*) FROM likes WHERE post_id=?", (post_id, ))
+		cursor.execute("SELECT COUNT(*) FROM likes WHERE post_id=%s", (post_id, ))
 		count = cursor.fetchone()[0]
 		
 	return jsonify({"liked": liked , "likes": count})
@@ -573,14 +581,14 @@ def like_post(post_id):
 def get_comments(post_id):
 	if "user" not in session:
 		return jsonify({"error": "login required"}), 403
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		cursor.execute("""
 		SELECT comments.id, comments.text, users.username, comments.user_id
 		FROM comments
 		JOIN users ON comments.user_id = users.id
-		WHERE comments.post_id = ?
+		WHERE comments.post_id = %s
 		ORDER BY comments.id DESC
 		""", (post_id, ))
 		
@@ -599,21 +607,22 @@ def add_comment(post_id):
 	if not text:
 		return jsonify({"error": "empty"}), 400
 	
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		#getting user_id
-		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
 		user = cursor.fetchone()
 		user_id = user[0]
 		
 		#Inserting comments
 		cursor.execute("""
 		INSERT INTO comments(user_id, post_id, text)
-		VALUES(?, ?, ?)
+		VALUES(%s, %s, %s)
+		RETURNING id
 		""", (user_id, post_id, text))
 		
-		comment_id = cursor.lastrowid
+		comment_id = cursor.fetchone()[0]
 		
 		conn.commit()
 		
@@ -626,17 +635,17 @@ def delete_comment(comment_id):
 		
 	username = session["user"]
 	
-	with sqlite3.connect(DB_PATH) as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		#getting user_id
-		cursor.execute("SELECT id FROM users WHERE username=?", (username, ))
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
 		user = cursor.fetchone()
 		user_id = user[0]
 		
 		
 		#getting commet
-		cursor.execute("SELECT user_id FROM comments WHERE id=?", (comment_id, ))
+		cursor.execute("SELECT user_id FROM comments WHERE id=%s", (comment_id, ))
 		comment = cursor.fetchone()
 		
 		if not comment:
@@ -645,7 +654,7 @@ def delete_comment(comment_id):
 		if comment[0] != user_id:
 			return jsonify({"error": "unauthorized"}), 403
 			
-		cursor.execute("DELETE FROM comments WHERE id=?", (comment_id, ))
+		cursor.execute("DELETE FROM comments WHERE id=%s", (comment_id, ))
 		conn.commit()
 		
 	return jsonify({"success": True})
@@ -659,4 +668,5 @@ def growth():
 	
 # ================== RUN ==================
 port = int(os.environ.get("PORT", 5000))
-app.run(host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=port)
