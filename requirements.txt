@@ -1,3 +1,5 @@
-flask
+Flask
+psycopg2-binary
 cloudinary
-werkzeug
+Werkzeug
+gunicorn
