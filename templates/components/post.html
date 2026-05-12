@@ -1,5 +1,13 @@
 <p><strong>@{{ post[6] }}</strong></p>
-      <img src="{{ post[2] }}" style="width:100%; max-height440px; object-fit: {{ post[5] or 'contain' }}; border-radius:10px; display:block;">
+      <div class="image-wrapper">
+        <div class="image-skeleton"></div>
+        <img 
+        loading="lazy"
+        src="{{ post[2] }}"
+        onload="imageLoaded(this)"
+        style="width:100%; max-height:440px; object-fit: {{ post[5] or 'contain' }}; border-radius:10px; display:block;">
+      </div>
+
       <div class="actions-row">
         <div class="left-actions">
           <button class="like-btn {% if post[7] %}liked{% endif %}" onclick="likePost({{ post[0] }}, this)">
