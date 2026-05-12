@@ -56,9 +56,7 @@
     }
   </style>
 </head>
-
 <body>
-
   <!-- NAVBAR -->
   <div class="navbar">
     <div class="logo">Fortune</div>
@@ -70,34 +68,39 @@
           <a onclick="confirmLogout()">Logout!</a>
         </form>
       </div>
-      <div id="loader" style=display:none;>
+      <div id="loader" style="display:none;">
         Logging out...
       </div>
     </div>
   </div>
-  
-  
   <main>
     <div class="profile-card">
-
       {% if profile %}
-
         {% if profile[5] and profile[5].startswith('http') %}
-          <img src="{{ profile[5] }}"
-class="{{ profile[6] if profile[6] else 'circle' }}"
-style="object-fit: {{ profile[8] or 'cover' }}">
+          <img
+            src="{{ profile[5] }}"
+            class="{{ profile[6] if profile[6] else 'circle' }}"
+            style="object-fit: {{ profile[8] or 'cover' }}"
+          >
         {% else %}
           <img src="/static/default.png" class="circle">
         {% endif %}
-
-        <div class="name">{{ profile[2] }}</div>
-        <div class="bio">{{ profile[3] }}</div>
-
+        <div class="name">
+          {{ profile[2] }}
+        </div>
+        <div class="bio">
+          {{ profile[3] }}
+        </div>
         {% if profile[4] %}
-          <a href="https://{{ profile[4] }}" target="_blank" class="website">{{ profile[4] }}</a>
+          <a
+            href="https://{{ profile[4] }}"
+            target="_blank"
+            class="website"
+          >
+            {{ profile[4] }}
+          </a>
         {% endif %}
-
-        <!-- STATS (dummy now, dynamic later) -->
+        <!-- STATS -->
         <div class="stats">
           <div class="stat">
             <h4>{{ post_count }}</h4>
@@ -112,59 +115,94 @@ style="object-fit: {{ profile[8] or 'cover' }}">
             <p>Following</p>
           </div>
         </div>
-
         <!-- BUTTONS -->
         <div class="buttons">
-          <button onclick="openEditModal()" class="btn primary">Edit Profile</button>
-          <a href="#" class="btn secondary">Share</a>
+          <button
+            onclick="openEditModal()"
+            class="btn primary"
+          >
+            Edit Profile
+          </button>
+          <a href="#" class="btn secondary">
+            Share
+          </a>
         </div>
-
         <!-- POSTS GRID -->
         <div class="posts">
           {% for post in posts %}
-          <a  href="/post/{{ post[0] }}" class="post-item">
-            <img src="{{ post[2] }}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;">
-            <p style="font-size:10px; color:white;" class="caption">{{ post[4] }}</p>
+          <a href="/post/{{ post[0] }}" class="post-item">
+            <img
+              src="{{ post[2] }}"
+              style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;"
+            >
+            <p
+              style="font-size:10px; color:white;"
+              class="caption"
+            >
+              {{ post[4] }}
+            </p>
           </a>
           {% endfor %}
         </div>
-
       {% else %}
-
         <img src="/static/default.png" class="circle">
         <p>No profile yet!</p>
-        <button onclick="openEditModal()" class="btn primary">Edit Profile</button>
-
+        <button
+          onclick="openEditModal()"
+          class="btn primary"
+        >
+          Edit Profile
+        </button>
       {% endif %}
-
     </div>
     {% include "components/navigation.html" %}
   </main>
   {% include "components/edit_profile_modal.html" %}
+
+  <!-- PROFILE UPLOAD LOADER -->
+  <div id="uploadLoader" class="upload-loader">
+    <div class="loader-box">
+      <div class="spinner-ring"></div>
+      <h3>Uploading Profile</h3>
+      <p>Please wait a moment...</p>
+    </div>
+  </div>
   <script>
-//Logout logic -
+// Logout logic
 function confirmLogout() {
+
   let result = confirm("Are you sure want to logout?");
+
   if (result) {
+
     showLoading();
+
     setTimeout(() => {
       document.getElementById("logoutForm").submit();
     }, 1000);
   }
 }
+
+
 function showLoading() {
   document.getElementById("loader").style.display = "block";
 }
+
+
 window.onload = function () {
+
   fetch("/check-session")
+
   .then(res => res.json())
+
   .then(data => {
+
     if (!data.logged_in) {
-      window.location.href = "/login-page"
+      window.location.href = "/login-page";
     }
-  })
+  });
 }
   </script>
   <script src="{{ url_for('static', filename='js/edit_profile_modal.js') }}"></script>
-  </body>
+</body>
 </html>
