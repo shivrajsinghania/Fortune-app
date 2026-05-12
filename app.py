@@ -294,7 +294,10 @@ def profile():
 @app.route("/profile/update", methods=["POST"])
 def update_profile():
     if "user" not in session:
-        return redirect("/login-page")
+        return jsonify({
+			"success": False,
+			"redirect": "/login-page"
+		}), 401
     
     username = session["user"]
 
