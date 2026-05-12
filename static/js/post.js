@@ -1,17 +1,57 @@
-  let currentPostId = null;
+ let currentPostId = null;
   
   function likePost(postId, btn) {
+    // prevent spam clicking
+    if (btn.disabled) return;
+    
+    btn.disabled = true;
+    const countEl = btn.nextElementSibling;
+    let currentLikes = parseInt(countEl.innerText);
+    
+    // current state
+    const alreadyLiked = btn.classList.contains("liked");
+    
+    // ===== INSTANT UI UPDATE =====
+    if (alreadyLiked) {
+      btn.classList.remove("liked");
+      countEl.innerText = currentLikes - 1;
+    } else {
+      btn.classList.add("liked");
+      countEl.innerText = currentLikes + 1;
+      
+      // popup animation
+      btn.classList.add("pop");
+      setTimeout(() => {
+        btn.classList.remove("pop");
+      }, 300);
+    }
+    
+    // ===== BACKEND REQUEST =====
     fetch(`/like/${postId}`, {
       method: "POST"
     })
+    
     .then(res => res.json())
     .then(data => {
-      btn.nextElementSibling.innerText = data.likes;
-      if (data.liked) {
+      // sync count with backend
+      countEl.innerText = data.likes;
+    })
+    
+    .catch(() => {
+      // revert if failed
+      if (alreadyLiked) {
         btn.classList.add("liked");
+        countEl.innerText = currentLikes;
       } else {
         btn.classList.remove("liked");
+        countEl.innerText = currentLikes;
       }
+      
+      alert("Like failed!");
+    })
+    
+    .finally(() => {
+      btn.disabled = false;
     });
   }
   
@@ -82,57 +122,110 @@
   }
   
   function sendComment() {
-    let text = document.getElementById("commentText").value;
+    let input = document.getElementById("commentText");
+    
+    let text = input.value.trim();
+    
+    if (!text) return;
+    
+    // clear immediately
+    input.value = "";
+    
+    // temporary id
+    const tempId = "temp-" + Date.now();
+    
+    // ===== CREATE COMMENT INSTANTLY =====
+    let newComment = `
+    <div class="comment new-comment" data-id="${tempId}">
+    <div class="comment-top">
+    <span class="username">
+    @You
+    </span>
+    </div>
+    <div class="comment-body">
+    <span class="text">
+    ${text}
+    </span>
+    <div class="comment-actions">
+    <!-- reply -->
+    <button class="icon-btn">
+    <svg viewBox="0 0 24 24" class="icon">
+    <path d="M10 9V5l-7 7 7 7v-4c5 0 8 1 11 5-1-7-4-11-11-11z"/>
+    </svg>
+    </button>
+    <!-- like -->
+    <button class="icon-btn">
+    <svg viewBox="0 0 24 24" class="icon">
+    <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
+    9 5 10.5 6.5 12 8 
+    13.5 6.5 15 5 17.5 5 
+    21.5 5 23.5 9.5 21.5 12.7 
+    19 15.8 12 21 12 21z"/>
+    </svg>
+    </button>
+    <!-- delete -->
+    <button
+    class="icon-btn delete"
+    onclick="confirmDeleteComment('${tempId}')"
+    >
+    <svg viewBox="0 0 24 24" class="icon delete-icon">
+    <path d="M6 6l12 12M18 6l-12 12"/>
+    </svg>
+    </button>
+    </div>
+    </div>
+    </div>
+    `;
+    
+    // insert instantly
+    document.getElementById("commentsList").innerHTML = newComment + document.getElementById("commentsList").innerHTML;
+    
+    // ===== UPDATE COUNT INSTANTLY =====
+    let countElement = document.querySelector(
+      `.comment-btn[onclick="openComments(${currentPostId})"]`
+    ).nextElementSibling;
+    
+    countElement.innerText = parseInt(countElement.innerText) + 1;
+    
+    // ===== BACKEND REQUEST =====
     fetch(`/add-comment/${currentPostId}`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({text: text})
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text: text
+      })
     })
+    
     .then(res => res.json())
     .then(data => {
-      if (data.success) {
-        let newComment = `
-        <div class="comment" data-id="${data.comment_id}">
-        <div class="comment-top">
-        <span class="username">@${data.username}</span>
-        </div>
-        <div class="comment-body">
-        <span class="text">${data.text}</span>
-        <div class="comment-actions">
-        <!-- reply -->
-        <button class="icon-btn">
-        <svg viewBox="0 0 24 24" class="icon">
-        <path d="M10 9V5l-7 7 7 7v-4c5 0 8 1 11 5-1-7-4-11-11-11z"/>
-        </svg>
-        </button>
-        <!-- like -->
-        <button class="icon-btn">
-        <svg viewBox="0 0 24 24" class="icon">
-        <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
-        9 5 10.5 6.5 12 8 
-        13.5 6.5 15 5 17.5 5 
-        21.5 5 23.5 9.5 21.5 12.7 
-        19 15.8 12 21 12 21z"/>
-        </svg>
-        </button>
-        <!-- delete -->
-        ${parseInt(data.user_id) === parseInt(currentUserId) ? `
-        <button class="icon-btn delete" onclick="confirmDeleteComment(${data.comment_id})">
-        <svg viewBox="0 0 24 24" class="icon delete-icon">
-        <path d="M6 6l12 12M18 6l-12 12"/>
-        </svg>
-        </button>
-        ` : ""}
-        </div>
-        </div>
-        </div>`;
-        document.getElementById("commentsList").innerHTML = newComment + document.getElementById("commentsList").innerHTML;
-        document.getElementById("commentText").value = "";
-        let countElement = document.querySelector(
-          `.comment-btn[onclick="openComments(${currentPostId})"]`
-        ).nextElementSibling;
-        countElement.innerText = parseInt(countElement.innerText) + 1;
+      // replace temp id
+      let tempComment = document.querySelector(
+        `[data-id="${tempId}"]`
+      );
+      
+      if (tempComment) {
+        tempComment.setAttribute(
+          "data-id",
+          data.comment_id
+        );
       }
+    })
+    
+    .catch(() => {
+      // remove failed comment
+      let tempComment = document.querySelector(
+        `[data-id="${tempId}"]`
+      );
+      
+      if (tempComment) {
+        tempComment.remove();
+      }
+      
+      // revert count
+      countElement.innerText = parseInt(countElement.innerText) - 1;
+      alert("Comment failed!");
     });
   }
   
@@ -143,36 +236,63 @@
   }
   
   function deleteComment(commentId) {
+    let el = document.querySelector(
+      `.comment[data-id="${commentId}"]`
+    );
+    
+    if (!el) return;
+    // animate instantly
+    el.classList.add("removing");
+    // update count instantly
+    let countElement = document.querySelector(
+      `.comment-btn[onclick="openComments(${currentPostId})"]`
+    ).nextElementSibling;
+    
+    countElement.innerText = Math.max(
+      0,
+      parseInt(countElement.innerText) - 1
+    );
+    
+    // remove visually
+    setTimeout(() => {
+      el.remove();
+    }, 250);
+    
+    // backend request
     fetch(`/delete-comment/${commentId}`, {
       method: "POST"
     })
+    
     .then(res => res.json())
     .then(data => {
-      if (data.success) {
-        let el = document.querySelector(`.comment[data-id="${commentId}"]`);
-        if (el) {
-          el.style.opacity = "0";
-          setTimeout(() => {
-            el.remove();
-            let countElement = document.querySelector(
-              `.comment-btn[onclick="openComments(${currentPostId})"]`
-            ).nextElementSibling;
-            countElement.innerText = Math.max(
-              0,
-              parseInt(countElement.innerText) - 1
-            );
-          }, 200);
-        }
+      if (!data.success) {
+        alert("Delete failed!");
       }
+    })
+    
+    .catch(() => {
+      alert("Delete failed!");
     });
   }
   
   function confirmDeleteComment(commentId) {
-    if (confirm("Delete this comment?")) {
-      deleteComment(commentId);
-    }
+    const result = confirm("Delete this comment?");
+    if (!result) return;
+    deleteComment(commentId);
   }
   
   function confirmDelete() {
     return confirm("Are you sure want to delete this post?");
   }
+  
+  function imageLoaded(img) {
+    img.parentElement.classList.add("loaded");
+  }
+  
+  window.addEventListener("load", () => {
+    document.querySelectorAll(".image-wrapper img").forEach((img) => {
+      if (img.complete) {
+        imageLoaded(img);
+      }
+    });
+  });
