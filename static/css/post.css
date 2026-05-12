@@ -28,6 +28,28 @@ body {
   transform: scale(1.1);
 }
 
+/* LIKE POP */
+
+.like-btn.pop .heart{
+
+  animation: likePop 0.3s ease;
+}
+
+@keyframes likePop{
+
+  0%{
+    transform: scale(1);
+  }
+
+  50%{
+    transform: scale(1.45);
+  }
+
+  100%{
+    transform: scale(1.1);
+  }
+}
+
 /* ===== COMMENT BUTTON ===== */
 .comment-btn {
   background: none;
@@ -106,6 +128,46 @@ body {
   padding: 10px 8px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   transition: opacity 0.2s ease;
+}
+
+/* COMMENT APPEAR */
+
+.comment.new-comment{
+
+  animation: commentAppear 0.35s ease;
+}
+
+/* COMMENT REMOVE */
+
+.comment.removing{
+
+  animation: commentRemove 0.25s ease forwards;
+}
+
+@keyframes commentAppear{
+
+  from{
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to{
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes commentRemove{
+
+  from{
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to{
+    opacity: 0;
+    transform: translateX(40px);
+  }
 }
 
 .comment-top {
@@ -210,4 +272,67 @@ body {
   background: #aaa;
   border-radius: 10px;
   margin: 8px auto;
+}
+.image-wrapper{
+  position: relative;
+  overflow: hidden;
+
+  background: rgba(255,255,255,0.03);
+
+  min-height: 200px;
+}
+
+/* skeleton */
+
+.image-skeleton{
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,0.05) 25%,
+      rgba(255,255,255,0.12) 50%,
+      rgba(255,255,255,0.05) 75%
+    );
+
+  background-size: 200% 100%;
+
+  animation: skeletonMove 1.2s infinite;
+}
+
+/* image hidden initially */
+
+.image-wrapper img{
+
+  opacity: 0;
+
+  transition: opacity 0.35s ease;
+}
+
+/* loaded state */
+
+.image-wrapper.loaded img{
+
+  opacity: 1;
+}
+
+/* hide skeleton */
+
+.image-wrapper.loaded .image-skeleton{
+
+  display: none;
+}
+
+/* animation */
+
+@keyframes skeletonMove{
+
+  0%{
+    background-position: 200% 0;
+  }
+
+  100%{
+    background-position: -200% 0;
+  }
 }
