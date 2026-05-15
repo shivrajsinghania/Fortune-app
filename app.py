@@ -124,6 +124,24 @@ def create_comments_table():
 	conn.close()
 create_comments_table()
 
+#create message table
+def create_message_table():
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	cursor.execute("""
+	CREATE TABLE IF NOT EXISTS messages(
+	id SERIAL PRIMARY KEY,
+	sender_id INTEGER,
+	receiver_id INTEGER,
+	message TEXT,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	)
+	""")
+	conn.commit()
+	conn.close()
+create_message_table()
+
 def add_user(email, username, hashed_password):
     try:
         with get_connection() as conn:
@@ -669,6 +687,128 @@ def growth():
 	
 	return render_template("growth.html", current_page="growth", username=session["user"])
 	
+@app.route("/network")
+def network():
+	if "user" not in session:
+		return redirect("/login-page")
+		
+	username = session["user"]
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		#gettin' user id'
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		current_user = cursor.fetchone()
+		current_user_id = current_user[0]
+		
+		#getting All Other Users
+		cursor.execute("""
+		SELECT id, username FROM users WHERE id != %s
+		""", (current_user_id, ))
+		
+		users = cursor.fetchall()
+		
+	return render_template("network.html", current_page="network", username=username, users=users)
+
+@app.route("/chat/<int:user_id>")
+def chat(user_id):
+	if "user" not in session:
+		return redirect("/login-page")
+	
+	username = session["user"]
+	
+	with get_connection() as conn:	
+		cursor = conn.cursor()
+		
+		#current user
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		current_user = cursor.fetchone()
+		current_user_id = current_user[0]
+		
+		#other user
+		cursor.execute("SELECT username FROM users WHERE id=%s", (user_id, ))
+		other_user = cursor.fetchone()
+		if not other_user:
+			return "user not found!"
+		
+	return render_template("chat.html", current_user_id=current_user_id, other_user_id=user_id, other_username=other_user[0])
+	
+@app.route("/send-message", methods=["POST"])
+def send_message():
+	if "user" not in session:
+		return jsonify({"success": False})
+		
+	data = request.json
+	
+	receiver_id = data.get("receiver_id")
+	text = data.get("message")
+	
+	username = session["user"]
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		#sender id
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		sender = cursor.fetchone()
+		sender_id = sender[0]
+		
+		#saving message
+		cursor.execute("""
+		INSERT INTO messages(
+		sender_id, receiver_id, message
+		)
+		VALUES(%s, %s, %s)
+		RETURNING id
+		""", (sender_id, receiver_id, text))
+		
+		message_id = cursor.fetchone()[0]
+		
+		conn.commit()
+		
+	return jsonify({
+	"success": True,
+	"message_id": message_id,
+	"message": text,
+	"sender_id": sender_id
+	})	
+
+@app.route("/get-messages/<int:user_id>")
+def get_messages(user_id):
+	if "user" not in session:
+		return jsonify([])
+		
+	username = session["user"]
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		#current user
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		current_user = cursor.fetchone()
+		current_user_id = current_user[0]
+		
+		#fetch conversation
+		cursor.execute("""
+		SELECT sender_id, message FROM messages
+		WHERE
+		(sender_id=%s AND receiver_id=%s)
+		OR
+		(sender_id=%s AND receiver_id=%s) 
+		ORDER BY id ASC
+		""", (
+		current_user_id,
+		user_id,
+		
+		user_id,
+		current_user_id
+		))
+		
+		messages = cursor.fetchall()
+		
+	return jsonify(messages)
+
 # ================== RUN ==================
 port = int(os.environ.get("PORT", 5000))
 if __name__ == "__main__":
