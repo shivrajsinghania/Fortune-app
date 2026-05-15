@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Network | Fortune</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/network.css') }}">
+</head>
+<body>
+  {% include "/components/navbar.html" %}
+
+  <div class="network-page">
+
+    <!-- HEADER -->
+    <div class="network-header">
+      <div>
+        <h2>Network</h2>
+        <p>Build connections. Create opportunities.</p>
+      </div>
+      <button class="new-chat-btn">
+        +
+      </button>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none"
+           stroke="currentColor"
+           stroke-width="1.8">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="M20 20L17 17"></path>
+      </svg>
+      <input type="text" placeholder="AI, Startup, Python, VC firms...">
+    </div>
+
+    <!-- CHAT LIST -->
+    <div class="chat-list">
+
+      <!-- CARD -->
+      {% for user in users %}
+      
+      <a href="/chat/{{ user[0] }}" class="chat-card">
+        <div class="avatar">{{ user[1][0].upper() }}</div>
+        
+        <div class="chat-info">
+          <div class="chat-top">
+            {{ user[1] }}
+            <span>new</span>
+          </div>
+          
+          <div class="chat-bottom">
+            <p>Start conversation</p>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+      
+    </div>
+    
+    <!-- SUGGESTED -->
+
+    <div class="suggested-section">
+
+      <div class="section-title">
+
+        <h3>Suggested Connections</h3>
+
+        <a href="#">See all</a>
+
+      </div>
+
+      <div class="suggested-list">
+
+        <div class="suggested-card">
+
+          <div class="avatar">R</div>
+
+          <h4>Ryan</h4>
+
+          <span>AI Builder</span>
+
+          <button>Connect</button>
+
+        </div>
+
+        <div class="suggested-card">
+
+          <div class="avatar">M</div>
+
+          <h4>Mia</h4>
+
+          <span>Python Developer</span>
+
+          <button>Connect</button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {% include "components/navigation.html" %}
+
+</body>
+</html>
