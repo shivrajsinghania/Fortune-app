@@ -1,69 +1,215 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Fortune/growth-page</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
-    <style>
-      body {
-        margin: 0;
-        font-family: Arial, Sans-Serif;
-        background-color: #f4f6f9;
-      }
-      .main {
-        padding: 20px;
-        padding-bottom: 70px;
-      }
-      .Welcome {
-        font-size: 22px;
-        margin-bottom: 20px;
-      }
-      .cards {
-        display: flex;
-        flex-wrap: wrap;
-      }
-      .card {
-        background-color: white;
-        color: black;
-        padding: 20px;
-        margin: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        flex: 1 1 40%;
-      }
-      .card:hover {
-        transform: scale(1.02);
-      }
-    </style>
-  </head>
-  <body>
-    {% include "components/navbar.html" %}
-    
-    <div class="main">
-      <div class="Welcome">
-        <strong>Welcome {{username}}👋!</strong>
+<head>
+  <title>Growth | Fortune</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/growth.css') }}">
+</head>
+
+<body>
+
+  {% include "components/navbar.html" %}
+
+  <main class="growth-page">
+
+    <!-- HERO -->
+
+    <section class="hero-section">
+
+      <div>
+
+        <h1>
+          Welcome back, {{ username }} 👋
+        </h1>
+
+        <p>
+          Your content, network and opportunities are growing.
+        </p>
+
       </div>
-      
-      <div class="cards">
-        <div class="card">
-          <h3>Total post</h3>
-          <p>0</p>
-        </div>
-        <div class="card">
-          <h3>Followers</h3>
-          <p>0</p>
-        </div>
-        <div class="card">
-          <h3>Earnings</h3>
-          <p>$0.00</p>
-        </div>
-        <div class="card">
-          <h3>Engagement</h3>
-          <p>0%</p>
-        </div>
+
+    </section>
+
+    <!-- MAIN STATS -->
+
+    <section class="stats-grid">
+
+      <div class="stat-card">
+
+        <span class="stat-label">
+          Total Posts
+        </span>
+
+        <h2>27</h2>
+
+        <small>+4 this week</small>
+
       </div>
-    </div>
-    {% include "components/navigation.html" %}
-  </body>
+
+      <div class="stat-card">
+
+        <span class="stat-label">
+          Followers
+        </span>
+
+        <h2>340</h2>
+
+        <small>+18 this week</small>
+
+      </div>
+
+      <div class="stat-card">
+
+        <span class="stat-label">
+          Connections
+        </span>
+
+        <h2>12</h2>
+
+        <small>Growing network</small>
+
+      </div>
+
+      <div class="stat-card">
+
+        <span class="stat-label">
+          Earnings
+        </span>
+
+        <h2>$12</h2>
+
+        <small>Monetization started</small>
+
+      </div>
+
+    </section>
+
+    <!-- PERFORMANCE -->
+
+    <section class="section">
+
+      <div class="section-header">
+
+        <h3>This Week</h3>
+
+        <a href="#">Analytics</a>
+
+      </div>
+
+      <div class="performance-card">
+
+        <div class="performance-item">
+
+          <h2>+22%</h2>
+
+          <p>Profile Reach</p>
+
+        </div>
+
+        <div class="performance-item">
+
+          <h2>+8</h2>
+
+          <p>New Followers</p>
+
+        </div>
+
+        <div class="performance-item">
+
+          <h2>+3</h2>
+
+          <p>New Connections</p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- INSIGHTS -->
+
+    <section class="section">
+
+      <div class="section-header">
+
+        <h3>Creator Insights</h3>
+
+      </div>
+
+      <div class="insight-list">
+
+        <div class="insight-card">
+
+          <div class="insight-dot"></div>
+
+          <p>
+            Your coding posts performed 2x better this week.
+          </p>
+
+        </div>
+
+        <div class="insight-card">
+
+          <div class="insight-dot"></div>
+
+          <p>
+            Most engagement comes between 7PM - 10PM.
+          </p>
+
+        </div>
+
+        <div class="insight-card">
+
+          <div class="insight-dot"></div>
+
+          <p>
+            3 builders viewed your profile today.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- QUICK ACTIONS -->
+
+    <section class="section">
+
+      <div class="section-header">
+
+        <h3>Quick Actions</h3>
+
+      </div>
+
+      <div class="action-grid">
+
+        <button class="action-btn">
+          Create Post
+        </button>
+
+        <button class="action-btn">
+          Grow Network
+        </button>
+
+        <button class="action-btn">
+          View Analytics
+        </button>
+
+        <button class="action-btn">
+          Edit Profile
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  {% include "components/navigation.html" %}
+
+</body>
 </html>
