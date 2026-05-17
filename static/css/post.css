@@ -336,3 +336,137 @@ body {
     background-position: -200% 0;
   }
 }
+
+/* ===== DELETE LOADER ===== */
+
+.delete-loader{
+
+  position: fixed;
+  inset: 0;
+
+  background: rgba(15,23,42,0.82);
+
+  backdrop-filter: blur(10px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition: 0.25s ease;
+}
+
+.delete-loader.show{
+
+  opacity: 1;
+  visibility: visible;
+}
+
+/* popup */
+
+.delete-box{
+
+  width: 260px;
+
+  padding: 26px 20px;
+
+  border-radius: 24px;
+
+  text-align: center;
+
+  background:
+  linear-gradient(
+    145deg,
+    rgba(255,255,255,0.08),
+    rgba(255,255,255,0.03)
+  );
+
+  border:
+  1px solid rgba(255,255,255,0.08);
+
+  animation: deletePopup 0.25s ease;
+}
+
+/* spinner */
+
+.delete-spinner{
+
+  width: 54px;
+  height: 54px;
+
+  margin: auto;
+
+  border-radius: 50%;
+
+  border: 4px solid rgba(255,255,255,0.1);
+
+  border-top: 4px solid #ff4d4d;
+
+  animation: deleteSpin 0.7s linear infinite;
+}
+
+.delete-box h3{
+
+  margin-top: 18px;
+
+  font-size: 20px;
+}
+
+.delete-box p{
+
+  color: #b8c1d1;
+
+  font-size: 13px;
+
+  margin-top: 8px;
+}
+
+/* animations */
+
+@keyframes deleteSpin{
+
+  from{
+    transform: rotate(0deg);
+  }
+
+  to{
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes deletePopup{
+
+  from{
+    transform: scale(0.85);
+    opacity: 0;
+  }
+
+  to{
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* remove post */
+
+.feed.removing{
+
+  animation: removePost 0.35s ease forwards;
+}
+
+@keyframes removePost{
+
+  from{
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to{
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
