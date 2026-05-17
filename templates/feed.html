@@ -25,13 +25,22 @@
     {% include "components/navbar.html" %}
     
     {% for post in posts %}
-    <div class="feed">
+    <div class="feed" id="post-{{ post[0] }}">
       {% set show_delete = (post[1] == user_id) %}
       {% include "components/post.html" %}
     </div>
     {% endfor %}
+    
     {% include "components/navigation.html" %}
     {% include "components/comment_modal.html" %}
+    
+    <div id="deleteLoader" class="delete-loader">
+      <div class="delete-box">
+        <div class="delete-spinner"></div>
+        <h3 id="deleteTitle">Deleting Post</h3>
+        <p id="deleteText">Removing your post...</p>
+      </div>
+    </div>
     <script>
       let currentUserId = {{ user_id or 0 }};
     </script>
