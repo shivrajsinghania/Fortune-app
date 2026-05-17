@@ -1,37 +1,54 @@
 let currentPostId = null;
   
   async function likePost(postId, button){
+    
     // prevent spam clicking
     if(button.dataset.loading === "true"){
       return;
     }
+    
     button.dataset.loading = "true";
+    let countElement = button.parentElement.querySelector(".like-count");
+    let currentCount = parseInt(countElement.innerText);
+    let isLiked = button.classList.contains("liked");
+    
+    // ===== INSTANT UI UPDATE =====
+    if(isLiked){
+      button.classList.remove("liked");
+      countElement.innerText = currentCount - 1;
+    }else{
+      button.classList.add("liked");
+      countElement.innerText = currentCount + 1;
+    }
+    
+    // ===== RESTART ANIMATION =====
+    button.classList.remove("pop");
+    void button.offsetWidth;
+    button.classList.add("pop");
+    
     try{
-      // animation restart
-      button.classList.remove("pop");
-      
-      // force reflow
-      void button.offsetWidth;
-      button.classList.add("pop");
-      
-      // optimistic UI
-      button.classList.toggle("liked");
-      
-      // send request
       let response = await fetch(`/like/${postId}`, {
         method: "POST"
       });
+      
       let data = await response.json();
       
-      // update count
-      button.parentElement.querySelector(".like-count").innerText = data.likes;
-    }catch(error){
-      console.log(error);
+      // sync with backend
+      countElement.innerText = data.likes;
+      
+    }catch(err){
+      console.log(err);
       
       // rollback if failed
-      button.classList.toggle("liked");
+      if(isLiked){
+        button.classList.add("liked");
+        countElement.innerText = currentCount;
+      }else{
+        button.classList.remove("liked");
+        countElement.innerText = currentCount;
+      }
+      
     }finally{
-      // unlock
       setTimeout(() => {
         button.dataset.loading = "false";
       }, 250);
