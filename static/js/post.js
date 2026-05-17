@@ -1,63 +1,52 @@
- let currentPostId = null;
+let currentPostId = null;
   
-  function likePost(postId, btn) {
+  async function likePost(postId, button){
     // prevent spam clicking
-    if (btn.disabled) return;
-    
-    btn.disabled = true;
-    const countEl = btn.nextElementSibling;
-    let currentLikes = parseInt(countEl.innerText);
-    
-    // current state
-    const alreadyLiked = btn.classList.contains("liked");
-    
-    // ===== INSTANT UI UPDATE =====
-    if (alreadyLiked) {
-      btn.classList.remove("liked");
-      countEl.innerText = currentLikes - 1;
-    } else {
-      btn.classList.add("liked");
-      countEl.innerText = currentLikes + 1;
-      
-      // popup animation
-      btn.classList.add("pop");
-      setTimeout(() => {
-        btn.classList.remove("pop");
-      }, 300);
+    if(button.dataset.loading === "true"){
+      return;
     }
-    
-    // ===== BACKEND REQUEST =====
-    fetch(`/like/${postId}`, {
-      method: "POST"
-    })
-    
-    .then(res => res.json())
-    .then(data => {
-      // sync count with backend
-      countEl.innerText = data.likes;
-    })
-    
-    .catch(() => {
-      // revert if failed
-      if (alreadyLiked) {
-        btn.classList.add("liked");
-        countEl.innerText = currentLikes;
-      } else {
-        btn.classList.remove("liked");
-        countEl.innerText = currentLikes;
-      }
+    button.dataset.loading = "true";
+    try{
+      // animation restart
+      button.classList.remove("pop");
       
-      alert("Like failed!");
-    })
-    
-    .finally(() => {
-      btn.disabled = false;
-    });
+      // force reflow
+      void button.offsetWidth;
+      button.classList.add("pop");
+      
+      // optimistic UI
+      button.classList.toggle("liked");
+      
+      // send request
+      let response = await fetch(`/like/${postId}`, {
+        method: "POST"
+      });
+      let data = await response.json();
+      
+      // update count
+      button.parentElement.querySelector(".like-count").innerText = data.likes;
+    }catch(error){
+      console.log(error);
+      
+      // rollback if failed
+      button.classList.toggle("liked");
+    }finally{
+      // unlock
+      setTimeout(() => {
+        button.dataset.loading = "false";
+      }, 250);
+    }
   }
   
   function openComments(postId) {
     document.body.classList.add("modal-open");
     currentPostId = postId;
+    let commentsList = document.getElementById("commentsList");
+    commentsList.innerHTML = `
+    <div style="padding:20px; text-align:center; color:#ccc;">
+    Loading comments...
+    </div>
+    `;
     document.getElementById("commentModal").style.display = "flex";
     if (!history.state || !history.state.modal) {
       history.pushState({modal: true}, "");
@@ -103,7 +92,7 @@
         </div>
         </div>`;
       });
-      document.getElementById("commentsList").innerHTML = html;
+      commentsList.innerHTML = html;
     });
   }
   
