@@ -1,4 +1,11 @@
 let currentPostId = null;
+const deleteLoader = document.getElementById("deleteLoader");
+function showDeleteLoader(){
+  deleteLoader.classList.add("show");
+}
+function hideDeleteLoader(){
+  deleteLoader.classList.remove("show");
+}
   
   async function likePost(postId, button){
     
@@ -287,12 +294,45 @@ let currentPostId = null;
     deleteComment(commentId);
   }
   
-  function confirmDelete() {
-    return confirm("Are you sure want to delete this post?");
-  }
-  
   function imageLoaded(img) {
     img.parentElement.classList.add("loaded");
+  }
+  
+  async function confirmDeletePost(postId){
+    const result = confirm(" Are you sure want to delete this post?");
+    if(!result) return;
+    let postElement = document.getElementById(`post-${postId}`);
+    // show loader
+    showDeleteLoader();
+    try{
+      let response = await fetch(
+        `/delete-post/${postId}`,
+        {
+          method: "POST"
+        }
+      );
+      
+      let data = await response.json();
+      if(data.success){
+        // success state
+        document.getElementById("deleteTitle").innerText = "Post Deleted";
+        document.getElementById("deleteText").innerText = "Removing from feed...";
+        
+        // animate post
+        postElement.classList.add("removing");
+        setTimeout(() => {
+          postElement.remove();
+          hideDeleteLoader();
+        }, 500);
+      }else{
+        hideDeleteLoader();
+        alert("Delete failed");
+      }
+    }catch(err){
+      console.log(err);
+      hideDeleteLoader();
+      alert("Delete failed");
+    }
   }
   
   window.addEventListener("load", () => {
