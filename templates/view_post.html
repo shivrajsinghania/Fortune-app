@@ -4,6 +4,7 @@
   <title>Post</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/post.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
   <style>
   body {
     margin: 0;
@@ -40,13 +41,22 @@
 <body>
   <div class="container">
     {% for post in posts %}
-    <div class="total-post {% if post[0] == current_id %}active{% endif %}">
+    <div class="total-post {% if post[0] == current_id %}active{% endif %}" id="post-{{ post[0] }}">
       {% set show_delete = True %}
       {% include "components/post.html" %}
     </div>
     {% endfor %}
   </div>
+  {% include "components/navigation.html" %}
   {% include "components/comment_modal.html" %}
+  
+  <div id="deleteLoader" class="delete-loader">
+    <div class="delete-box">
+      <div class="delete-spinner"></div>
+      <h3 id="deleteTitle">Deleting Post</h3>
+      <p id="deleteText">Removing your post...</p>
+    </div>
+  </div>
   <script>
     const currentUserId = {{ user_id }};
     window.onload = function() {
@@ -59,4 +69,3 @@
   <script src="{{ url_for('static', filename='js/post.js') }}"></script>
 </body>
 </html>
-
