@@ -1,3 +1,4 @@
+let loadedMessageCount = 0;
 
 async function sendMessage() {
   const input = document.getElementById("messageInput");
@@ -5,7 +6,12 @@ async function sendMessage() {
       
   //prevent empty message 
   if (text === "") return;
-      
+  
+  //show instantly
+  appendMessage(text, "sent");
+  loadedMessageCount++;
+  input.value = ""; //clear input
+  
   try {
     const response = await fetch("/send-message", {
       method: "POST",
@@ -19,17 +25,14 @@ async function sendMessage() {
     });
         
     const data = await response.json();
-        
-    if (data.success) {
-      //append message instantly
-      appendMessage(text, "sent");
-      
-      //clear input 
-      input.value = "";
+    
+    //failed saved    
+    if (!data.success) {
+      alert("message falied!");
     }
     
   } catch(error) {
-    alert("Message failed!");
+    alert("Network error!");
   }
 }
     
@@ -51,24 +54,35 @@ async function loadMessages() {
   try {
     const response = await fetch(`/get-messages/${receiverId}`);
     const data = await response.json();
+    
+    //only load new messages
+    if (data.length === loadedMessageCount) return;
+    
     const messages = document.getElementById("messages");
     
-    //clear old ui 
-    messages.innerHTML = "";
+    //first laod only 
+    if (loadedMessageCount === 0) {
+      messages.innerHTML = "";
+    }
     
-    data.forEach(msg => {
+    //append only new messages 
+    for (
+      let i = loadedMessageCount;
+      i < data.length;
+      i++
+    ) {
+      const msg = data[i];
       const senderId = msg[0];
       const text = msg[1];
-      
-      //determine message type
       const type =
       senderId === currentUserId
       ? "sent"
       : "received";
       
       appendMessage(text, type);
-    });
-    
+    }
+    loadedMessageCount = data.length;
+  
   } catch(error) {
     alert("failed to load messages!")
   }
