@@ -497,7 +497,10 @@ def view_post(post_id):
 @app.route("/delete-post/<int:post_id>", methods=["POST"])
 def delete_post(post_id):
 	if "user" not in session:
-		return redirect("/login-page")
+		return jsonify({
+		"success": False,
+		"redirect": "/login-page"
+		})
 		
 	username = session["user"]
 	
@@ -530,7 +533,9 @@ def delete_post(post_id):
 		cursor.execute("DELETE FROM posts WHERE id=%s", (post_id, ))
 		conn.commit()
 		
-	return redirect("/profile")
+	return jsonify({
+	"success": True
+	})
 	
 @app.route("/feed")
 def feed():
