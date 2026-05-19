@@ -1,4 +1,4 @@
-let loadedMessageCount = 0;
+let loadedMessageIds = [];
 
 async function sendMessage() {
   const input = document.getElementById("messageInput");
@@ -9,7 +9,7 @@ async function sendMessage() {
   
   //show instantly
   appendMessage(text, "sent");
-  loadedMessageCount++;
+  
   input.value = ""; //clear input
   
   try {
@@ -26,9 +26,8 @@ async function sendMessage() {
         
     const data = await response.json();
     
-    //failed saved    
-    if (!data.success) {
-      alert("message falied!");
+    if (data.success) {
+      loadedMessageIds.push(data.message_id);
     }
     
   } catch(error) {
@@ -36,13 +35,17 @@ async function sendMessage() {
   }
 }
     
-function appendMessage(text, type) {
+function appendMessage(text, type, messageId = null) {
   const messages = document.getElementById("messages");
   const div = document.createElement("div");
   
   div.classList.add("message", type);
   
   div.textContent = text;
+  
+  if (messageId !== null) {
+    div.dataset.id = messageId;
+  }
   
   messages.appendChild(div);
   
@@ -54,37 +57,27 @@ async function loadMessages() {
   try {
     const response = await fetch(`/get-messages/${receiverId}`);
     const data = await response.json();
-    
-    //only load new messages
-    if (data.length === loadedMessageCount) return;
-    
-    const messages = document.getElementById("messages");
-    
-    //first laod only 
-    if (loadedMessageCount === 0) {
-      messages.innerHTML = "";
-    }
-    
-    //append only new messages 
-    for (
-      let i = loadedMessageCount;
-      i < data.length;
-      i++
-    ) {
-      const msg = data[i];
+    data.forEach(msg => {
+      const messageId = msg[2];
+      
+      // already exists
+      if (loadedMessageIds.includes(messageId)) {
+        return;
+      }
+
       const senderId = msg[0];
       const text = msg[1];
-      const type =
-      senderId === currentUserId
+      const type = senderId === currentUserId
       ? "sent"
       : "received";
       
-      appendMessage(text, type);
-    }
-    loadedMessageCount = data.length;
-  
+      appendMessage(text, type, messageId);
+      
+      loadedMessageIds.push(messageId);
+    });
+    
   } catch(error) {
-    alert("failed to load messages!")
+    alert("message failed!")
   }
 }
 
