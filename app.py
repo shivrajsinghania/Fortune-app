@@ -796,7 +796,7 @@ def get_messages(user_id):
 		
 		#fetch conversation
 		cursor.execute("""
-		SELECT sender_id, message FROM messages
+		SELECT sender_id, message, id FROM messages
 		WHERE
 		(sender_id=%s AND receiver_id=%s)
 		OR
