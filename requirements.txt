@@ -3,3 +3,4 @@ psycopg2-binary
 cloudinary
 Werkzeug
 gunicorn
+flask-socketio
