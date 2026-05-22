@@ -1,39 +1,49 @@
 let loadedMessageIds = [];
+const socket = io();
 
 async function sendMessage() {
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
-      
-  //prevent empty message 
+
   if (text === "") return;
-  
-  //show instantly
-  appendMessage(text, "sent");
-  
-  input.value = ""; //clear input
-  
-  try {
-    const response = await fetch("/send-message", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        receiver_id: receiverId,
-        message: text
-      })
-    });
-        
-    const data = await response.json();
-    
-    if (data.success) {
-      loadedMessageIds.push(data.message_id);
-    }
-    
-  } catch(error) {
-    alert("Network error!");
-  }
+
+  input.value = "";
+
+  socket.emit("send_message", {
+    sender_id: currentUserId,
+    receiver_id: receiverId,
+    message: text
+  });
 }
+
+socket.on("receive_message", (data) => {
+
+  const isCurrentChat =
+    (data.sender_id == currentUserId &&
+     data.receiver_id == receiverId)
+    ||
+    (data.sender_id == receiverId &&
+     data.receiver_id == currentUserId);
+
+  if (!isCurrentChat) return;
+
+  if (loadedMessageIds.includes(data.message_id)) {
+    return;
+  }
+
+  const type =
+    data.sender_id == currentUserId
+    ? "sent"
+    : "received";
+
+  appendMessage(
+    data.message,
+    type,
+    data.message_id
+  );
+
+  loadedMessageIds.push(data.message_id);
+});
     
 function appendMessage(text, type, messageId = null) {
   const messages = document.getElementById("messages");
@@ -82,4 +92,3 @@ async function loadMessages() {
 }
 
 window.sendMessage = sendMessage;
-window.loadMessages = loadMessages;
