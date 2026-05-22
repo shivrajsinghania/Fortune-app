@@ -835,9 +835,9 @@ def handle_send_message(data):
 		RETURNING id
 		""", (sender_id, receiver_id, message))
 		
-		conn.commit()
-		
 		message_id = cursor.fetchone()[0]
+		
+		conn.commit()
 	
 	emit("receive_message", {
 	"message_id": message_id,
