@@ -4,3 +4,4 @@ cloudinary
 Werkzeug
 gunicorn
 flask-socketio
+eventlet
