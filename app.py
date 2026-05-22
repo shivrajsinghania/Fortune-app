@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
 from flask import Flask, render_template, request, redirect, session, flash, jsonify, make_response
+from flask_socketio import SocketIO, emit
 
 # ================== PATH SETUP ==================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -172,6 +173,7 @@ def validate_user(username, password):
 # ================== APP ==================
 app = Flask(__name__)
 app.secret_key = "mysecretkey"
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.after_request
 def no_cache(response):
@@ -814,7 +816,38 @@ def get_messages(user_id):
 		
 	return jsonify(messages)
 
+@socketio.on("send_message")
+def handle_send_message(data):
+	sender_id = data["sender_id"]
+	receiver_id = data["receiver_id"]
+	message = data["message"]
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		cursor.execute("""
+		INSERT INTO messages(
+		sender_id,
+		receiver_id,
+		message
+		)
+		VALUES(%s, %s, %s)
+		RETURNING id
+		""", (sender_id, receiver_id, message))
+		
+		conn.commit()
+		
+		message_id = cursor.fetchone()[0]
+	
+	emit("receive_message", {
+	"message_id": message_id,
+	"sender_id": sender_id,
+	"receiver_id": receiver_id,
+	"message": message
+	}, broadcast=True)
+
+
 # ================== RUN ==================
 port = int(os.environ.get("PORT", 5000))
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=port)
+    socketio.run(app, host="0.0.0.0", port=port)
