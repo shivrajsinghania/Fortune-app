@@ -77,7 +77,8 @@ async function loadMessages() {
 
       const senderId = msg[0];
       const text = msg[1];
-      const type = senderId === currentUserId
+      const type =
+      Number(senderId) === Number(currentUserId)
       ? "sent"
       : "received";
       
