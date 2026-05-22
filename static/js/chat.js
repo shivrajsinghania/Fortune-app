@@ -19,11 +19,11 @@ async function sendMessage() {
 socket.on("receive_message", (data) => {
 
   const isCurrentChat =
-    (data.sender_id == currentUserId &&
-     data.receiver_id == receiverId)
+    (Number(data.sender_id) === Number(currentUserId) &&
+     Number(data.receiver_id) === Number(receiverId))
     ||
-    (data.sender_id == receiverId &&
-     data.receiver_id == currentUserId);
+    (Number(data.sender_id) === Number(receiverId) &&
+     Number(data.receiver_id) === Number(currentUserId));
 
   if (!isCurrentChat) return;
 
@@ -32,7 +32,7 @@ socket.on("receive_message", (data) => {
   }
 
   const type =
-    data.sender_id == currentUserId
+    Number(data.sender_id) === Number(currentUserId)
     ? "sent"
     : "received";
 
