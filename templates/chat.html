@@ -250,13 +250,13 @@
       <button onclick="sendMessage()">➤</button>
     </div>
   </div>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
   <script>
     const receiverId = {{ other_user_id }};
     const currentUserId = {{ current_user_id }};
     loadMessages();
     
-    setInterval(loadMessages, 1000);
   </script>
 </body>
 </html>
