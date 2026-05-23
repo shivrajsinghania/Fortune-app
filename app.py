@@ -102,6 +102,7 @@ def create_likes_table():
 	id SERIAL PRIMARY KEY,
 	user_id INTEGER,
 	post_id INTEGER
+	UNIQUE(user_id, post_id)
 	)
 	""")
 	conn.commit()
@@ -143,6 +144,23 @@ def create_message_table():
 	conn.close()
 create_message_table()
 
+# create comment_likes table
+def create_comment_likes_table():
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	cursor.execute("""
+	CREATE TABLE IF NOT EXISTS comment_likes(
+	id SERIAL PRIMARY KEY,
+	user_id INTEGER,
+	comment_id INTEGER,
+	UNIQUE(user_id, comment_id)
+	)
+	""")
+	conn.commit()
+	conn.close()
+create_comment_likes_table()
+
 def add_user(email, username, hashed_password):
     try:
         with get_connection() as conn:
@@ -156,7 +174,9 @@ def add_user(email, username, hashed_password):
             conn.commit()
             
         return "success"
-    except:
+        
+    except Exception as e:
+        print(e)
         return "exists"
 
 def validate_user(username, password):
@@ -608,17 +628,38 @@ def like_post(post_id):
 @app.route("/comments/<int:post_id>")
 def get_comments(post_id):
 	if "user" not in session:
-		return jsonify({"error": "login required"}), 403
+		return jsonify({"error": "login required"}), 403	
+		
+	username = session["user"]
+	
 	with get_connection() as conn:
 		cursor = conn.cursor()
 		
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		user = cursor.fetchone()
+		user_id = user[0]
+		
 		cursor.execute("""
-		SELECT comments.id, comments.text, users.username, comments.user_id
+		SELECT comments.id, comments.text, users.username, comments.user_id,
+		
+		(
+		SELECT COUNT(*)
+		FROM comment_likes
+		WHERE comment_likes.comment_id = comments.id
+		) as like_count,
+		
+		EXISTS(
+		SELECT 1
+		FROM comment_likes
+		WHERE comment_likes.comment_id = comments.id
+		AND comment_likes.user_id=%s
+		) as liked_by_user
+		
 		FROM comments
 		JOIN users ON comments.user_id = users.id
 		WHERE comments.post_id = %s
 		ORDER BY comments.id DESC
-		""", (post_id, ))
+		""", (user_id, post_id))
 		
 		comments = cursor.fetchall()
 	
@@ -686,6 +727,45 @@ def delete_comment(comment_id):
 		conn.commit()
 		
 	return jsonify({"success": True})
+
+@app.route("/like-comment/<int:comment_id>", methods=["POST"])
+def like_comment(comment_id):
+	if "user" not in session:
+		return jsonify({"error": "login required"}), 403
+	
+	username = session["user"]
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		#getting user_id
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		user = cursor.fetchone()
+		user_id = user[0]
+		
+		#check if already liked!
+		cursor.execute("SELECT * FROM comment_likes WHERE user_id=%s AND comment_id=%s", (user_id, comment_id))
+		existing = cursor.fetchone()
+		
+		if existing:
+			
+			#unlike
+			cursor.execute("DELETE FROM comment_likes WHERE user_id=%s AND comment_id=%s", (user_id, comment_id))
+			liked = False
+		
+		else:
+			
+			#like
+			cursor.execute("INSERT INTO comment_likes(user_id, comment_id) VALUES(%s, %s)", (user_id, comment_id))
+			liked = True
+		
+		conn.commit()
+		
+		#get updated count
+		cursor.execute("SELECT COUNT(*) FROM comment_likes WHERE comment_id=%s", (comment_id, ))
+		count = cursor.fetchone()[0]
+		
+	return jsonify({"liked": liked, "comment_likes": count})
 
 @app.route("/growth")
 def growth():
