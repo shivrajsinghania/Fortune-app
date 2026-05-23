@@ -101,7 +101,7 @@ def create_likes_table():
 	CREATE TABLE IF NOT EXISTS likes(
 	id SERIAL PRIMARY KEY,
 	user_id INTEGER,
-	post_id INTEGER
+	post_id INTEGER,
 	UNIQUE(user_id, post_id)
 	)
 	""")
