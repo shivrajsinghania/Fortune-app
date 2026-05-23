@@ -21,7 +21,8 @@ body {
   cursor: pointer;
 }
 
-.like-btn.liked .heart {
+.like-btn.liked .heart,
+.comment-like-btn.liked .icon {
   fill: #ff3040;
   stroke: #ff3040;
   filter: drop-shadow(0 0 6px);
@@ -30,7 +31,8 @@ body {
 
 /* LIKE POP */
 
-.like-btn.pop .heart{
+.like-btn.pop .heart,
+.comment-like-btn.pop .icon{
 
   animation: likePop 0.3s ease;
 }
@@ -196,6 +198,7 @@ body {
 /* ===== COMMENT ACTIONS ===== */
 .comment-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -215,7 +218,7 @@ body {
 }
 
 .icon-btn:hover .icon {
-  stroke: white;
+  opacity: 0.9;
 }
 
 /* ===== DELETE BUTTON (POST + COMMENT) ===== */
@@ -469,4 +472,40 @@ body {
     opacity: 0;
     transform: scale(0.92);
   }
+}
+
+.comment-like-btn .icon{
+  fill: transparent;
+  stroke: #aaa;
+  transition: 0.2s ease;
+}
+
+.comment-like-count{
+  color: #aaa;
+  font-size: 13px;
+  margin-left: -4px;
+  min-width: 10px;
+}
+/* ===== COMMENT LIKE FIX ===== */
+
+.comment-like-btn.liked .icon{
+  fill: #ff3040 !important;
+  stroke: #ff3040 !important;
+}
+
+.comment-like-btn:not(.liked) .icon{
+  fill: transparent !important;
+  stroke: #aaa !important;
+}
+
+/* remove mobile tap glow/focus */
+
+.comment-like-btn{
+  -webkit-tap-highlight-color: transparent;
+}
+
+.comment-like-btn:focus,
+.comment-like-btn:active{
+  outline: none;
+  box-shadow: none;
 }
