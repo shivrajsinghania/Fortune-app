@@ -62,6 +62,56 @@ function hideDeleteLoader(){
     }
   }
   
+  async function likeComment(commentId, button) {
+    if(button.dataset.loading === "true") return;
+    button.dataset.loading = "true";
+    
+    const countElement = button.nextElementSibling;
+    let currentCount = parseInt(countElement.innerText);
+    let isLiked = button.classList.contains("liked");
+    
+    //instant like/dislke
+    if(isLiked) {
+      button.classList.remove("liked");
+      countElement.innerText = currentCount - 1;
+    } else {
+      button.classList.add("liked");
+      countElement.innerText = currentCount + 1;
+    }
+    // ===== animation =====
+    button.classList.remove("pop");
+    void button.offsetWidth;
+    button.classList.add("pop");
+    
+    try{
+      const response = await fetch(
+        `/like-comment/${commentId}`,
+        {
+          method: "POST"
+        }
+      );
+      
+      const data = await response.json();
+      countElement.innerText = data.comment_likes;
+    
+    } catch(error) {
+      console.log(error);
+      // rollback
+      if(isLiked){
+        button.classList.add("liked");
+        countElement.innerText = currentCount;
+      }else{
+        button.classList.remove("liked");
+        countElement.innerText = currentCount;
+      }
+    
+    }finally{
+      setTimeout(() => {
+        button.dataset.loading = "false";
+      }, 250);
+    }
+  }
+  
   function openComments(postId) {
     document.body.classList.add("modal-open");
     currentPostId = postId;
@@ -95,7 +145,7 @@ function hideDeleteLoader(){
         </svg>
         </button>
         <!-- like -->
-        <button class="icon-btn">
+        <button class="icon-btn comment-like-btn ${c[5] ? "liked" : ""}" onclick="likeComment(${c[0]}, this)">
         <svg viewBox="0 0 24 24" class="icon">
         <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
         9 5 10.5 6.5 12 8 
@@ -104,6 +154,7 @@ function hideDeleteLoader(){
         19 15.8 12 21 12 21z"/>
         </svg>
         </button>
+        <span class="comment-like-count">${c[4]}</span>
         <!-- delete -->
         ${parseInt(c[3]) === parseInt(currentUserId) ? `
         <button class="icon-btn delete" onclick="confirmDeleteComment(${c[0]})">
@@ -167,7 +218,7 @@ function hideDeleteLoader(){
     </svg>
     </button>
     <!-- like -->
-    <button class="icon-btn">
+    <button class="icon-btn comment-like-btn" onclick="likeComment('${tempId}', this)">
     <svg viewBox="0 0 24 24" class="icon">
     <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
     9 5 10.5 6.5 12 8 
@@ -176,6 +227,7 @@ function hideDeleteLoader(){
     19 15.8 12 21 12 21z"/>
     </svg>
     </button>
+    <span class="comment-like-count">0</span>
     <!-- delete -->
     <button
     class="icon-btn delete"
@@ -223,6 +275,13 @@ function hideDeleteLoader(){
           "data-id",
           data.comment_id
         );
+        
+        //rpdate onclick
+        const likeBtn = tempComment.querySelector(".comment-like-btn");
+        likeBtn.setAttribute("onclick", `likeComment(${data.comment_id}, this)`);
+        
+        const deleteBtn = tempComment.querySelector(".delete");
+        deleteBtn.setAttribute("onclick", `confirmDeleteComment(${data.comment_id})`);
       }
     })
     
