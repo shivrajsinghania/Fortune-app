@@ -5,3 +5,4 @@ Werkzeug
 gunicorn
 flask-socketio
 eventlet
+Flask-Session
