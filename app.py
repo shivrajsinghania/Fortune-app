@@ -255,11 +255,11 @@ def submit():
         	user = cursor.fetchone()
         
         session.permanent = True
-		session["user"] = username
-		session["user_id"] = user[0]
+        session["user"] = username
+        session["user_id"] = user[0]
         
         return redirect("/feed")
-
+        
     flash("Username already exists!", "error")
     return render_template("signup.html")
 
@@ -287,11 +287,11 @@ def login():
         	user = cursor.fetchone()
         	
         session.permanent = True
-		session["user"] = username
-		session["user_id"] = user[0]
+        session["user"] = username
+        session["user_id"] = user[0]
         
         return redirect("/feed")
-
+        
     flash("Invalid login credentials!", "error")
     return redirect("/login-page")
 
