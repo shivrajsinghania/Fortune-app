@@ -14,6 +14,7 @@ import psycopg2
 from flask import Flask, render_template, request, redirect, session, flash, jsonify, make_response
 from flask_socketio import SocketIO, emit
 from datetime import timedelta
+from flask_session import Session
 
 # ================== PATH SETUP ==================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -193,10 +194,13 @@ def validate_user(username, password):
 
 # ================== APP ==================
 app = Flask(__name__)
+
 app.secret_key = os.environ.get("SECRET_KEY")
 
+app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_PERMANENT"] = True
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
+Session(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 @app.after_request
