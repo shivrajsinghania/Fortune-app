@@ -1,0 +1,302 @@
+/* ─── RESET & BASE ─────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #fff;
+  font-family: "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+
+/* ─── PAGE WRAPPER ──────────────────────────────────── */
+.page {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* ─── TOP BAR ───────────────────────────────────────── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.topbar-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.icon-btn {
+  background: rgba(255,255,255,0.07);
+  border: none;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  background: rgba(255,255,255,0.13);
+}
+
+.post-btn {
+  background: linear-gradient(135deg, #4da6ff, #0066ff);
+  border: none;
+  color: #fff;
+  padding: 8px 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.post-btn:hover {
+  opacity: 0.88;
+}
+
+/* ─── FORM ──────────────────────────────────────────── */
+#postForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─── UPLOAD PLACEHOLDER ────────────────────────────── */
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 130px;
+  border-radius: 12px;
+  border: 1.5px dashed rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.upload-placeholder:hover {
+  border-color: #4da6ff;
+  background: rgba(77,166,255,0.05);
+}
+
+.upload-icon {
+  width: 32px;
+  height: 32px;
+  stroke: #4da6ff;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.upload-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.upload-sub {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.preview-wrap {
+  display: none;          /* shown by JS after image selected */
+  position: relative;
+  width: 100%;
+  height: 280px;          /* cover mode: container has fixed height so no black bars */
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b1120;
+}
+
+/* contain mode — JS adds this class */
+.preview-wrap.contain-mode {
+  height: auto;
+}
+
+.preview-wrap img {
+  width: 100%;
+  height: 100%;           /* always fill the container */
+  max-height: 440px;
+  object-fit: cover;      /* JS sets to contain for Full Image mode */
+  display: block;
+}
+
+.change-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  border: none;
+  color: #fff;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.change-btn:hover {
+  background: rgba(0,0,0,0.7);
+}
+
+/* ─── FIT SELECTOR ──────────────────────────────────── */
+.fit-row {
+  display: none;          /* shown by JS after image selected */
+  gap: 8px;
+  background: rgba(255,255,255,0.05);
+  padding: 5px;
+  border-radius: 14px;
+}
+
+.fit-btn {
+  flex: 1;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.fit-btn.active {
+  background: rgba(77,166,255,0.15);
+  border-color: #4da6ff;
+  color: #fff;
+}
+
+/* ─── CAPTION ───────────────────────────────────────── */
+#postForm textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: "Segoe UI", sans-serif;
+  color: #fff;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#postForm textarea:focus {
+  border-color: #4da6ff;
+}
+
+#postForm textarea::placeholder {
+  color: #64748b;
+}
+
+/* ─── COMING SOON ───────────────────────────────────── */
+.coming-soon {
+  text-align: center;
+  color: #475569;
+  font-size: 13px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255,255,255,0.06);
+}
+
+/* ─── POST LOADER OVERLAY ───────────────────────────── */
+.post-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.88);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.post-loader.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.loader-box {
+  width: 280px;
+  padding: 28px 22px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.08);
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0,0,0,0.4);
+  animation: popIn 0.3s ease;
+}
+
+.loader-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: linear-gradient(135deg, #4da6ff, #0066ff);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.loader-box h3 {
+  font-size: 17px;
+  margin-bottom: 6px;
+}
+
+.loader-box p {
+  font-size: 13px;
+  color: #b8c1d1;
+}
+
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  margin-top: 18px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, #4da6ff, #7cc4ff);
+  border-radius: 999px;
+  animation: slide 1s linear infinite;
+}
+
+/* ─── ANIMATIONS ────────────────────────────────────── */
+@keyframes slide {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(280%); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08); }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
