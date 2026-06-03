@@ -74,22 +74,10 @@
   height: 20px;
 }
 
-.profile-avatar {
-  width: 38px;
-  height: 38px;
-
-  border-radius: 50%;
-
-  background: linear-gradient(135deg, #00ffcc, #00c2ff);
-
-  color: black;
-
-  font-weight: bold;
-  text-decoration: none;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 14px;
+.profile-avatar{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid rgba(255,255,255,0.15);
 }
