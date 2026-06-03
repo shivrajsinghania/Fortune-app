@@ -118,21 +118,12 @@ body {
 }
 
 /* AVATAR */
-
-.avatar {
-  width: 52px;
-  height: 52px;
-
-  border-radius: 50%;
-
-  background: linear-gradient(135deg, #00ffcc, #00c2ff);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  color: black;
-  font-weight: bold;
+.avatar{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  object-fit:cover;
+  flex-shrink:0;
 }
 
 /* CHAT INFO */
@@ -147,14 +138,20 @@ body {
   align-items: center;
 }
 
+.username{
+  color:white;
+  font-size:17px;
+  font-weight:600;
+}
+
+.status{
+  color:#888;
+  font-size:12px;
+}
+
 .chat-top h3 {
   margin: 0;
   font-size: 16px;
-}
-
-.chat-top span {
-  color: #888;
-  font-size: 12px;
 }
 
 .chat-bottom {
@@ -244,19 +241,13 @@ body {
 
 .suggested-card button {
   margin-top: 16px;
-
   width: 100%;
-
   padding: 10px;
-
   border: none;
   border-radius: 12px;
-
   background: #00ffcc;
   color: black;
-
   font-weight: bold;
-
   cursor: pointer;
 }
 
