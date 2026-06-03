@@ -41,12 +41,17 @@
       {% for user in users %}
       
       <a href="/chat/{{ user[0] }}" class="chat-card">
+        
+        {% if user[2] %}
+        <img src="{{ user[2] }}" loading="lazy" class="avatar">
+        {% else %}
         <div class="avatar">{{ user[1][0].upper() }}</div>
+        {% endif %}
         
         <div class="chat-info">
           <div class="chat-top">
-            {{ user[1] }}
-            <span>new</span>
+            <span class="username">{{ user[1] }}</span>
+            <span class="status">new</span>
           </div>
           
           <div class="chat-bottom">
@@ -61,45 +66,30 @@
     <!-- SUGGESTED -->
 
     <div class="suggested-section">
-
+      
       <div class="section-title">
-
         <h3>Suggested Connections</h3>
-
         <a href="#">See all</a>
-
       </div>
 
       <div class="suggested-list">
-
+        
         <div class="suggested-card">
-
-          <div class="avatar">R</div>
-
+          <img src="/static/default.png" class="avatar">
           <h4>Ryan</h4>
-
           <span>AI Builder</span>
-
           <button>Connect</button>
-
         </div>
 
         <div class="suggested-card">
-
           <div class="avatar">M</div>
-
           <h4>Mia</h4>
-
           <span>Python Developer</span>
-
           <button>Connect</button>
-
         </div>
-
+        
       </div>
-
     </div>
-
   </div>
 
   {% include "components/navigation.html" %}
