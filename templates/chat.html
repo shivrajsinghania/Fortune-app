@@ -47,23 +47,20 @@
       1px solid rgba(255,255,255,0.05);
     }
 
-    .avatar{
-      width:44px;
-      height:44px;
-      border-radius:50%;
-      background:
-      linear-gradient(
-        135deg,
-        #00ffcc,
-        #00c2ff
-      );
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:black;
-      font-weight:bold;
-      font-size:18px;
-    }
+.avatar{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  object-fit:cover;
+  flex-shrink:0;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:black;
+  font-weight:bold;
+  font-size:18px;
+}
 
     .user-info h2{
 
@@ -220,6 +217,14 @@
 
       border-radius:10px;
     }
+    .username-link{
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .username-link:hover{
+      color: #4da6ff;
+    }
 
   </style>
 </head>
@@ -229,12 +234,20 @@
     
     <!-- HEADER -->
     <div class="chat-header">
+      {% if other_profile_pic %}
+      <img src="{{ other_profile_pic }}" loading="lazy" class="avatar">
+      {% else %}
       <div class="avatar">
         {{ other_username[0].upper() }}
       </div>
+      {% endif %}
 
       <div class="user-info">
-        <h2>{{ other_username }}</h2>
+        <h2>
+          <a href="/user/{{ other_username }}" class="username-link">
+            {{ other_username }}
+          </a>
+        </h2>
         <p>Active now</p>
       </div>
     </div>
