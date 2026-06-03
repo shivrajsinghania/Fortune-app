@@ -1,209 +1,263 @@
-<!DOCTYPE html>  
-<html>  
-<head>  
-  <title>Fortune.com</title>  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile_modal.css') }}">  
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">  
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">  
-  <style>  
-    * {  
-      margin: 0;  
-      padding: 0;  
-      box-sizing: border-box;  
-      font-family: "Segoe UI", sans-serif;  
-    }  
-  
-    body {  
-      background: linear-gradient(135deg, #0f172a, #1e293b);  
-      color: #fff;  
-    }  
-  
-    /* NAVBAR */  
-    .navbar {  
-      display: flex;  
-      justify-content: space-between;  
-      align-items: center;  
-      padding: 15px 25px;  
-      background: rgba(255,255,255,0.05);  
-      backdrop-filter: blur(10px);  
-      border-bottom: 1px solid rgba(255,255,255,0.1);  
-    }  
-  
-    .logo {  
-      font-weight: bold;  
-      font-size: 18px;  
-      color: #4da6ff;  
-    }  
-  
-    .nav-links a {  
-      margin-left: 15px;  
-      text-decoration: none;  
-      color: #ccc;  
-      font-size: 14px;  
-      transition: 0.3s;  
-    }  
-  
-    .nav-links a:hover {  
-      color: #fff;  
-    }  
-  
-    /* MAIN */  
-    main {  
-      display: flex;  
-      justify-content: center;  
-      padding: 30px 15px;  
-    }  
-  </style>  
-</head>  
-<body>  
-  <!-- NAVBAR -->  
-  <div class="navbar">  
-    <div class="logo">Fortune</div>  
-    <div class="nav-links">  
-      <a href="#">saved</a>  
-      <a href="#">Settings</a>  
-      <div class="logoutbtn">  
-        <form id="logoutForm" action="/logout" method="post">  
-          <a onclick="confirmLogout()">Logout!</a>  
-        </form>  
-      </div>  
-      <div id="loader" style="display:none;">  
-        Logging out...  
-      </div>  
-    </div>  
-  </div>  
-  <main>  
-    <div class="profile-card">  
-      {% if profile %}  
-        {% if profile[5] and profile[5].startswith('http') %}  
-          <img  
-            src="{{ profile[5] }}"  
-            class="{{ profile[6] if profile[6] else 'circle' }}"  
-            style="object-fit: {{ profile[8] or 'cover' }}"  
-          >  
-        {% else %}  
-          <img src="/static/default.png" class="circle">  
-        {% endif %}  
-        <div class="name">  
-          {{ profile[2] }}  
-        </div>  
-        <div class="bio">  
-          {{ profile[3] }}  
-        </div>  
-        {% if profile[4] %}  
-          <a  
-            href="https://{{ profile[4] }}"  
-            target="_blank"  
-            class="website"  
-          >  
-            {{ profile[4] }}  
-          </a>  
-        {% endif %}  
-        <!-- STATS -->  
-        <div class="stats">  
-          <div class="stat">  
-            <h4>{{ post_count }}</h4>  
-            <p>Posts</p>  
-          </div>  
-          <div class="stat">  
-            <h4>340</h4>  
-            <p>Followers</p>  
-          </div>  
-          <div class="stat">  
-            <h4>180</h4>  
-            <p>Following</p>  
-          </div>  
-        </div>  
-        <!-- BUTTONS -->  
-        <div class="buttons">  
-          <button  
-            onclick="openEditModal()"  
-            class="btn primary"  
-          >  
-            Edit Profile  
-          </button>  
-          <a href="#" class="btn secondary">  
-            Share  
-          </a>  
-        </div>  
-        <!-- POSTS GRID -->  
-        <div class="posts">  
-          {% for post in posts %}  
-          <a href="/post/{{ post[0] }}" class="post-item">  
-            <img  
-              src="{{ post[2] }}"  
-              loading="lazy"  
-              style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;"  
-            >  
-            <p  
-              style="font-size:10px; color:white;"  
-              class="caption"  
-            >  
-              {{ post[4] }}  
-            </p>  
-          </a>  
-          {% endfor %}  
-        </div>  
-      {% else %}  
-        <img src="/static/default.png" class="circle">  
-        <p>No profile yet!</p>  
-        <button  
-          onclick="openEditModal()"  
-          class="btn primary"  
-        >  
-          Edit Profile  
-        </button>  
-      {% endif %}  
-    </div>  
-    {% include "components/navigation.html" %}  
-  </main>  
-  {% include "components/edit_profile_modal.html" %}  
-  
-  <!-- PROFILE UPLOAD LOADER -->  
-  <div id="uploadLoader" class="upload-loader">  
-    <div class="loader-box">  
-      <div class="spinner-ring"></div>  
-      <h3>Updating Profile</h3>  
-      <p>Please wait a moment...</p>  
-    </div>  
-  </div>  
-  <script>  
-// Logout logic  
-function confirmLogout() {  
-  
-  let result = confirm("Are you sure want to logout?");  
-  
-  if (result) {  
-  
-    showLoading();  
-  
-    setTimeout(() => {  
-      document.getElementById("logoutForm").submit();  
-    }, 1000);  
-  }  
-}  
-  
-  
-function showLoading() {  
-  document.getElementById("loader").style.display = "block";  
-}  
-  
-  
-window.onload = function () {  
-  
-  fetch("/check-session")  
-  
-  .then(res => res.json())  
-  
-  .then(data => {  
-  
-    if (!data.logged_in) {  
-      window.location.href = "/login-page";  
-    }  
-  });  
-}  
-  </script>  
-  <script src="{{ url_for('static', filename='js/edit_profile_modal.js') }}"></script>  
-</body>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Fortune</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile_modal.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 18px;
+      color: #00ffcc;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #94a3b8;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: #fff; }
+
+    .logoutbtn a {
+      color: #94a3b8;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .logoutbtn a:hover { color: #ff6b6b; }
+
+    #loader { font-size: 13px; color: #94a3b8; }
+
+    /* MAIN */
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px 90px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo">Fortune</div>
+    <div class="nav-links">
+      <a href="#">Saved</a>
+      <a href="#">Settings</a>
+      <div class="nav-explore-wrap" id="navExploreWrap">
+        <button class="nav-explore-btn" id="navExploreBtn" onclick="toggleSheet()" aria-label="Explore">☰</button>
+        <div class="nav-dropdown" id="navDropdown">
+          <p class="sheet-title">Explore Fortune</p>
+          <ul class="sheet-menu">
+            <li><a href="#">About</a></li>
+            <li><a href="#">Projects</a></li>
+            <li><a href="#">Activity</a></li>
+            <li><a href="#">Network</a></li>
+            <li><a href="#">Saved</a></li>
+            <li><a href="#">Settings</a></li>
+            <li><a href="#" class="sheet-logout" onclick="confirmLogout(); return false;">⏻ Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden logout form -->
+  <form id="logoutForm" action="/logout" method="post" style="display:none;"></form>
+
+  <!-- LOGOUT ANIMATION OVERLAY -->
+  <div id="logoutOverlay" class="logout-overlay">
+    <div class="logout-box">
+      <div class="logout-rings">
+        <div class="logout-ring r1"></div>
+        <div class="logout-ring r2"></div>
+        <div class="logout-ring r3"></div>
+        <div class="logout-icon">⏻</div>
+      </div>
+      <p class="logout-msg" id="logoutMsg">Logging out…</p>
+      <p class="logout-sub">See you soon!</p>
+    </div>
+  </div>
+
+  <main>
+    <div class="profile-card">
+      {% if profile %}
+        <!-- PHOTO -->
+        {% if profile[5] and profile[5].startswith('http') %}
+          <img
+            src="{{ profile[5] }}"
+            class="{{ profile[6] if profile[6] else 'circle' }}"
+            style="object-fit: {{ profile[8] or 'cover' }}"
+          >
+        {% else %}
+          <img src="/static/default.png" class="circle">
+        {% endif %}
+
+        <!-- NAME -->
+        <div class="name">{{ profile[2] }}</div>
+
+        <!-- BIO -->
+        <div class="bio">{{ profile[3] }}</div>
+
+        <!-- WEBSITE -->
+        {% if profile[4] %}
+          <a href="https://{{ profile[4] }}" target="_blank" class="website">
+            ↗ {{ profile[4] }}
+          </a>
+        {% endif %}
+
+        <!-- STATS + ACTIONS layout -->
+        <div class="profile-mid">
+
+          <!-- ACTIONS — vertical left column -->
+          <div class="actions">
+            <button onclick="openEditModal()" class="btn primary">Edit Profile</button>
+            <a href="#" class="btn secondary">Share</a>
+            <button class="btn achievement">🏆 Achievements</button>
+          </div>
+
+          <!-- NEON DIVIDER -->
+          <div class="neon-divider"></div>
+
+          <!-- STATS — compact right column -->
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-num">{{ post_count }}</span>
+              <span class="stat-label">Posts</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">340</span>
+              <span class="stat-label">Followers</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">180</span>
+              <span class="stat-label">Following</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- POSTS GRID -->
+        <div class="posts-label">Posts</div>
+        <div class="posts">
+          {% for post in posts %}
+          <a href="/post/{{ post[0] }}/{{ user_id }}" class="post-item">
+            <img
+              src="{{ post[2] }}"
+              loading="lazy"
+              alt="{{ post[4] }}"
+            >
+          </a>
+          {% endfor %}
+        </div>
+
+      {% else %}
+
+        <img src="/static/default.png" class="circle">
+        <p class="bio" style="margin-top:12px;">No profile yet!</p>
+        <div class="buttons" style="margin-top:16px;">
+          <button onclick="openEditModal()" class="btn primary">Edit Profile</button>
+        </div>
+
+      {% endif %}
+
+    </div>
+
+    {% include "components/navigation.html" %}
+  </main>
+
+  {% include "components/edit_profile_modal.html" %}
+
+  <!-- PROFILE UPLOAD LOADER -->
+  <div id="uploadLoader" class="upload-loader">
+    <div class="loader-box">
+      <div class="spinner-ring"></div>
+      <h3 id="loaderTitle">Updating Profile</h3>
+      <p id="loaderSub">Please wait a moment…</p>
+    </div>
+  </div>
+
+  <script>
+    /* ── LOGOUT ── */
+    function confirmLogout() {
+      if (!confirm("Are you sure you want to logout?")) return;
+      closeSheet();
+      const overlay = document.getElementById('logoutOverlay');
+      overlay.classList.add('visible');
+      setTimeout(() => {
+        document.getElementById('logoutForm').submit();
+      }, 2200);
+    }
+
+    /* ── SESSION CHECK ── */
+    window.onload = function () {
+      fetch("/check-session")
+        .then(res => res.json())
+        .then(data => {
+          if (!data.logged_in) window.location.href = "/login-page";
+        });
+    }
+
+    
+    /* ── NAV DROPDOWN ── */
+    function toggleSheet() {
+      const wrap = document.getElementById('navExploreWrap');
+      wrap.classList.toggle('open');
+    }
+
+    function closeSheet() {
+      document.getElementById('navExploreWrap').classList.remove('open');
+    }
+
+    /* Close dropdown when clicking outside */
+    document.addEventListener('click', function(e) {
+      const wrap = document.getElementById('navExploreWrap');
+      if (wrap && !wrap.contains(e.target)) {
+        wrap.classList.remove('open');
+      }
+    });
+
+  </script>
+
+  <script src="{{ url_for('static', filename='js/edit_profile_modal.js') }}"></script>
+</body>
 </html>
