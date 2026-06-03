@@ -1,4 +1,7 @@
-<p><strong>@{{ post[6] }}</strong></p>
+<div class="post-user">
+  <img src="{{ post[7] or '/static/default.png' }}" loading="lazy" class="post-avatar">
+  <a href="/user/{{ post[6] }}" class="username-link">@{{ post[6] }}</a>
+</div>
       <div class="image-wrapper">
         <div class="image-skeleton"></div>
         <img 
@@ -10,7 +13,7 @@
 
       <div class="actions-row">
         <div class="left-actions">
-          <button class="like-btn {% if post[7] %}liked{% endif %}" onclick="likePost({{ post[0] }}, this)">
+          <button class="like-btn {% if post[8] %}liked{% endif %}" onclick="likePost({{ post[0] }}, this)">
             <svg class="heart" viewBox="0 0 24 24">
               <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
               9 5 10.5 6.5 12 8 
@@ -19,14 +22,14 @@
               19 15.8 12 21 12 21z"/>
             </svg>
           </button>
-          <span class="like-count">{{ post[8] }}</span>
+          <span class="like-count">{{ post[9] }}</span>
           
           <button class="comment-btn" onclick="openComments({{ post[0] }})">
             <svg viewBox="0 0 24 24" class="comment-icon">
               <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
             </svg>
           </button>
-          <span class="comment-count">{{ post[9] }}</span>
+          <span class="comment-count">{{ post[10] }}</span>
         </div>
         <div class="right-actions">
           {% if show_delete %}
