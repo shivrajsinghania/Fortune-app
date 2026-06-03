@@ -74,13 +74,12 @@ window.addEventListener("popstate", (event) => {
 });
 
 // PROFILE FORM SUBMIT
-document
-  .getElementById("editForm")
-  .addEventListener("submit", async function (e) {
-
+document.getElementById("editForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     
     showLoader();
+    document.getElementById("loaderTitle").textContent = "Updating Profile";
+    document.getElementById("loaderSub").textContent = "Please wait a moment…";
     
     try {
       const formData = new FormData();
