@@ -172,8 +172,19 @@ body {
   }
 }
 
-.comment-top {
-  margin-bottom: 4px;
+.comment-top{
+  display:flex;
+  align-items:center;
+  margin-bottom:4px;
+  gap:10px;
+}
+
+.comment-avatar{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  object-fit:cover;
+  flex-shrink:0;
 }
 
 .username {
@@ -508,4 +519,29 @@ body {
 .comment-like-btn:active{
   outline: none;
   box-shadow: none;
+}
+.username-link{
+  color:white;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.username-link:hover{
+  opacity:0.8;
+}
+.post-user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  margin-bottom:10px;
+}
+
+.post-avatar{
+  width:42px;
+  height:42px;
+
+  border-radius:50%;
+
+  object-fit:cover;
 }
