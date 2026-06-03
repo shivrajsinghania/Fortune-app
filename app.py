@@ -338,7 +338,13 @@ def profile():
     	posts = cursor.fetchall()
     post_count = len(posts)
 
-    return render_template("profile.html", profile=profile, posts=posts, post_count=post_count, current_page="profile", username=username)
+    return render_template("profile.html",
+    profile=profile,
+    posts=posts,
+    post_count=post_count,
+    current_page="profile",
+    username=username,
+    user_id=user_id)
 
 # ================== UPDATE PROFILE ==================
 @app.route("/profile/update", methods=["POST"])
@@ -426,6 +432,60 @@ def update_profile():
     "fit_type": fit_type
     })
 
+@app.route("/user/<username>")
+def user_profile(username):
+	if "user" not in session:
+		return redirect("/login-page")
+	
+	profile_username = username
+	current_username = session["user"]
+	
+	if username == session["user"]:
+		return redirect("/profile")
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		#get user
+		cursor.execute("""
+		SELECT id, username FROM users WHERE username=%s
+		""", (username, ))
+		user = cursor.fetchone()
+		
+		if not user:
+			return "user not found!"
+		
+		user_id = user[0]
+		
+		#getting profile
+		cursor.execute("""
+		SELECT *
+		FROM profiles
+		WHERE user_id=%s
+		""", (user_id, ))
+		profile = cursor.fetchone()
+		
+		#getting posts
+		cursor.execute("""
+		SELECT *
+		FROM posts
+		WHERE user_id=%s
+		ORDER BY id DESC
+		""", (user_id, ))
+		posts = cursor.fetchall()
+		post_count = len(posts)
+		
+	return render_template(
+	"user_profile.html",
+	profile=profile,
+	posts=posts,
+	profile_username=profile_username,
+	username=current_username,
+	user_id=user_id,
+	post_count=post_count,
+	is_owner=(current_username == username)
+	)
+
 @app.route("/create-post", methods=["GET", "POST"])
 def create_post():
 	if "user" not in session:
@@ -491,9 +551,8 @@ def create_post():
 	"success": True
 	})
 	
-
-@app.route("/post/<int:post_id>")
-def view_post(post_id):
+@app.route("/post/<int:post_id>/<int:owner_id>")
+def view_post(post_id, owner_id):
 	if "user" not in session:
 		return redirect("/login-page")
 		
@@ -509,22 +568,46 @@ def view_post(post_id):
 		
 		#getting all posts
 		cursor.execute("""
-		SELECT posts.*, users.username,
+		SELECT posts.*,
+		users.username,
+		profiles.profile_pic,
+		
 		EXISTS(
-		SELECT 1 FROM likes
-		WHERE likes.post_id = posts.id AND likes.user_id=%s
+		SELECT 1
+		FROM likes
+		WHERE likes.post_id = posts.id
+		AND likes.user_id=%s
 		) as liked_by_user,
-		(SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) as like_count,
-		(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count
+		
+		(
+		SELECT COUNT(*)
+		FROM likes
+		WHERE likes.post_id = posts.id
+		) as like_count,
+		
+		(
+		SELECT COUNT(*)
+		FROM comments
+		WHERE comments.post_id = posts.id
+		) as comment_count
+		
 		FROM posts
-		JOIN users ON posts.user_id = users.id
+		JOIN users
+		ON posts.user_id = users.id
+		
+		LEFT JOIN profiles
+		ON profiles.user_id = users.id
 		WHERE posts.user_id = %s
 		ORDER BY posts.id DESC
-		""", (user_id, user_id))
+		""", (user_id, owner_id))
 		
 		posts = cursor.fetchall()
 	
-	return render_template("view_post.html", posts=posts, current_id=post_id, user_id=user_id)
+	return render_template(
+	"view_post.html",
+	posts=posts,
+	current_id=post_id,
+	user_id=user_id)
 
 @app.route("/delete-post/<int:post_id>", methods=["POST"])
 def delete_post(post_id):
@@ -569,6 +652,32 @@ def delete_post(post_id):
 	"success": True
 	})
 	
+@app.context_processor
+def inject_user_profile():
+	
+	if "user" not in session:
+		return {}
+		
+	username = session["user"]
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		cursor.execute("""
+		SELECT profiles.profile_pic
+		FROM profiles
+		JOIN users
+		ON profiles.user_id = users.id
+		WHERE users.username=%s
+		""", (username, ))
+		
+		profile = cursor.fetchone()
+		
+	return {
+	"navbar_profile_pic":
+		profile[0] if profile else "/static/default.png"
+	}
+
 @app.route("/feed")
 def feed():
 	if "user" not in session:
@@ -650,26 +759,39 @@ def get_comments(post_id):
 		user_id = user[0]
 		
 		cursor.execute("""
-		SELECT comments.id, comments.text, users.username, comments.user_id,
-		
-		(
-		SELECT COUNT(*)
-		FROM comment_likes
-		WHERE comment_likes.comment_id = comments.id
-		) as like_count,
-		
-		EXISTS(
-		SELECT 1
-		FROM comment_likes
-		WHERE comment_likes.comment_id = comments.id
-		AND comment_likes.user_id=%s
-		) as liked_by_user
-		
-		FROM comments
-		JOIN users ON comments.user_id = users.id
-		WHERE comments.post_id = %s
-		ORDER BY comments.id DESC
-		""", (user_id, post_id))
+        SELECT
+            comments.id,
+            comments.text,
+            users.username,
+            comments.user_id,
+            
+            COALESCE(
+            profiles.profile_pic,
+            '/static/default.png'
+            ) as profile_pic,
+            
+            (
+                SELECT COUNT(*)
+                FROM comment_likes
+                WHERE comment_likes.comment_id = comments.id
+            ) as like_count,
+
+            EXISTS(
+                SELECT 1
+                FROM comment_likes
+                WHERE comment_likes.comment_id = comments.id
+                AND comment_likes.user_id = %s
+            ) as liked_by_user
+
+        FROM comments
+        JOIN users ON comments.user_id = users.id
+        
+        LEFT JOIN profiles
+        ON profiles.user_id = users.id
+        
+        WHERE comments.post_id = %s
+        ORDER BY comments.id DESC
+        """, (user_id, post_id))
 		
 		comments = cursor.fetchall()
 	
@@ -694,6 +816,12 @@ def add_comment(post_id):
 		user = cursor.fetchone()
 		user_id = user[0]
 		
+		cursor.execute("""
+		SELECT profile_pic FROM profiles WHERE user_id=%s
+		""", (user_id, ))
+		profile = cursor.fetchone()
+		profile_pic = (profile[0] if profile else "/static/default.png")
+		
 		#Inserting comments
 		cursor.execute("""
 		INSERT INTO comments(user_id, post_id, text)
@@ -705,7 +833,14 @@ def add_comment(post_id):
 		
 		conn.commit()
 		
-	return jsonify({"success": True, "username": username, "text": text, "comment_id": comment_id, "user_id": user_id})
+	return jsonify({
+	"success": True,
+	"username": username,
+	"text": text,
+	"comment_id": comment_id,
+	"user_id": user_id,
+	"profile_pic": profile_pic
+	})
 	
 @app.route("/delete-comment/<int:comment_id>", methods=["POST"])
 def delete_comment(comment_id):
@@ -801,12 +936,24 @@ def network():
 		
 		#getting All Other Users
 		cursor.execute("""
-		SELECT id, username FROM users WHERE id != %s
+		SELECT
+		users.id,
+		users.username,
+		profiles.profile_pic
+		
+		FROM users
+		LEFT JOIN profiles
+		ON users.id = profiles.user_id
+		WHERE users.id != %s
 		""", (current_user_id, ))
 		
 		users = cursor.fetchall()
 		
-	return render_template("network.html", current_page="network", username=username, users=users)
+	return render_template(
+	"network.html",
+	current_page="network",
+	username=username,
+	users=users)
 
 @app.route("/chat/<int:user_id>")
 def chat(user_id):
@@ -824,12 +971,31 @@ def chat(user_id):
 		current_user_id = current_user[0]
 		
 		#other user
-		cursor.execute("SELECT username FROM users WHERE id=%s", (user_id, ))
+		cursor.execute("""
+		SELECT
+		users.username,
+		profiles.profile_pic
+		FROM users
+		
+		LEFT JOIN profiles
+		ON users.id = profiles.user_id
+		WHERE users.id=%s
+		""", (user_id,))
+		
 		other_user = cursor.fetchone()
+		other_username = other_user[0]
+		other_profile_pic = other_user[1]
+		
 		if not other_user:
 			return "user not found!"
 		
-	return render_template("chat.html", current_user_id=current_user_id, other_user_id=user_id, other_username=other_user[0])
+	return render_template(
+	"chat.html",
+	current_user_id=current_user_id,
+	other_user_id=user_id,
+	other_username=other_username,
+	other_profile_pic=other_profile_pic
+	)
 	
 @app.route("/send-message", methods=["POST"])
 def send_message():
