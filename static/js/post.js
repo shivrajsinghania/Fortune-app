@@ -133,7 +133,14 @@ function hideDeleteLoader(){
         html += `
         <div class="comment" data-id="${c[0]}">
         <div class="comment-top">
-        <span class="username">@${c[2]}</span>
+        <img src="${c[4] || '/static/default.png'}" loading="lazy" class="comment-avatar">
+        <a
+        href="/user/${c[2]}"
+        class="username-link"
+        onclick="sessionStorage.setItem('openCommentPost', ${postId})"
+        >
+        @${c[2]}
+        </a>
         </div>
         <div class="comment-body">
         <span class="text">${c[1]}</span>
@@ -145,7 +152,7 @@ function hideDeleteLoader(){
         </svg>
         </button>
         <!-- like -->
-        <button class="icon-btn comment-like-btn ${c[5] ? "liked" : ""}" onclick="likeComment(${c[0]}, this)">
+        <button class="icon-btn comment-like-btn ${c[6] ? "liked" : ""}" onclick="likeComment(${c[0]}, this)">
         <svg viewBox="0 0 24 24" class="icon">
         <path d="M12 21s-7-5.2-9.5-8.3C.5 9.5 2.5 5 6.5 5 
         9 5 10.5 6.5 12 8 
@@ -154,7 +161,7 @@ function hideDeleteLoader(){
         19 15.8 12 21 12 21z"/>
         </svg>
         </button>
-        <span class="comment-like-count">${c[4]}</span>
+        <span class="comment-like-count">${c[5]}</span>
         <!-- delete -->
         ${parseInt(c[3]) === parseInt(currentUserId) ? `
         <button class="icon-btn delete" onclick="confirmDeleteComment(${c[0]})">
@@ -202,9 +209,10 @@ function hideDeleteLoader(){
     let newComment = `
     <div class="comment new-comment" data-id="${tempId}">
     <div class="comment-top">
-    <span class="username">
+    <img src="${currentProfilePic}" loading="lazy" class="comment-avatar">
+    <a href="/profile" class="username-link">
     @You
-    </span>
+    </a>
     </div>
     <div class="comment-body">
     <span class="text">
@@ -400,4 +408,13 @@ function hideDeleteLoader(){
         imageLoaded(img);
       }
     });
+  });
+  
+  window.addEventListener("load", () => {
+    const savedPost = sessionStorage.getItem("openCommentPost");
+    if(savedPost){
+      openComments(savedPost);
+      
+      sessionStorage.removeItem("openCommentPost");
+    }
   });
