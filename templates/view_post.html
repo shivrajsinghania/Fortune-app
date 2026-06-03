@@ -42,7 +42,7 @@
   <div class="container">
     {% for post in posts %}
     <div class="total-post {% if post[0] == current_id %}active{% endif %}" id="post-{{ post[0] }}">
-      {% set show_delete = True %}
+      {% set show_delete = (post[1] == user_id) %}
       {% include "components/post.html" %}
     </div>
     {% endfor %}
@@ -59,6 +59,8 @@
   </div>
   <script>
     const currentUserId = {{ user_id }};
+    const currentProfilePic = "{{ navbar_profile_pic }}";
+    
     window.onload = function() {
       let activePost = document.querySelector(".active");
       if (activePost) {
