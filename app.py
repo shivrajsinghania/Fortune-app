@@ -338,7 +338,8 @@ def profile():
     	posts = cursor.fetchall()
     post_count = len(posts)
 
-    return render_template("profile.html",
+    return render_template(
+    "profile.html",
     profile=profile,
     posts=posts,
     post_count=post_count,
@@ -694,7 +695,10 @@ def feed():
 		user_id = user[0]
 		
 		cursor.execute("""
-		SELECT posts.*, users.username,
+		SELECT posts.*,
+		users.username,
+		profiles.profile_pic,
+		
 		EXISTS(
 		SELECT 1 FROM likes
 		WHERE likes.post_id = posts.id AND likes.user_id=%s
@@ -703,11 +707,20 @@ def feed():
 		(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count
 		FROM posts
 		JOIN users ON posts.user_id = users.id
+		
+		LEFT JOIN profiles
+		ON profiles.user_id = users.id
 		ORDER BY posts.id DESC
 		""", (user_id, ))
 		posts = cursor.fetchall()
 	
-	return render_template("feed.html", posts=posts, user_id=user_id, current_page="feed", username=username)
+	return render_template(
+	"feed.html",
+	posts=posts,
+	user_id=user_id,
+	current_page="feed",
+	username=username
+	)
 
 @app.route("/like/<int:post_id>", methods=["POST"])
 def like_post(post_id):
