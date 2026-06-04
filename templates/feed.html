@@ -43,6 +43,7 @@
     </div>
     <script>
       let currentUserId = {{ user_id or 0 }};
+      const currentProfilePic = "{{ navbar_profile_pic }}";
     </script>
     <script src="{{ url_for('static', filename='js/post.js') }}"></script>
   </body>
