@@ -1,0 +1,19 @@
+<div id="connectionsModal" class="conn-modal">
+  <div class="conn-sheet" id="connSheet">
+
+    <div class="conn-handle"></div>
+
+    <div class="conn-header">
+      <button id="connTabFollowers" class="conn-tab active" onclick="switchTab('followers')">
+        Followers
+      </button>
+      <button id="connTabFollowing" class="conn-tab" onclick="switchTab('following')">
+        Following
+      </button>
+      <button class="conn-close" onclick="closeConnections()">✕</button>
+    </div>
+
+    <div id="connList" class="conn-list"></div>
+
+  </div>
+</div>
