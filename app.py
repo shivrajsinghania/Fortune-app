@@ -163,6 +163,23 @@ def create_comment_likes_table():
 	conn.close()
 create_comment_likes_table()
 
+#create follows table
+def create_follows_table():
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	cursor.execute("""
+	CREATE TABLE IF NOT EXISTS follows(
+	id SERIAL PRIMARY KEY,
+	follower_id INTEGER,
+	following_id INTEGER,
+	UNIQUE(follower_id, following_id)
+	)
+	""")
+	conn.commit()
+	conn.close()
+create_follows_table()
+
 def add_user(email, username, hashed_password):
     try:
         with get_connection() as conn:
