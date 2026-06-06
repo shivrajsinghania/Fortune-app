@@ -313,32 +313,29 @@ def profile():
 
     username = session["user"]
 
-    #getting user_id
     with get_connection() as conn:
         cursor = conn.cursor()
+
+        # getting user_id
         cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
         user = cursor.fetchone()
+        user_id = user[0]
 
-    user_id = user[0]
-    
-    #getting profile
-    with get_connection() as conn:
-        cursor = conn.cursor()
+        # getting profile
         cursor.execute("SELECT * FROM profiles WHERE user_id=%s", (user_id,))
         profile = cursor.fetchone()
-    
-    #getting posts
-    with get_connection() as conn:
-    	cursor = conn.cursor()
-    	cursor.execute("""
-    	SELECT * FROM posts
-    	WHERE user_id=%s
-    	ORDER BY id DESC
-    	""", (user_id, ))
-    	posts = cursor.fetchall()
-    post_count = len(posts)
-    
-    # getting followers
+
+        # getting posts
+        cursor.execute("""
+            SELECT *
+            FROM posts
+            WHERE user_id=%s
+            ORDER BY id DESC
+        """, (user_id,))
+        posts = cursor.fetchall()
+        post_count = len(posts)
+
+        # getting followers
         cursor.execute("""
             SELECT COUNT(*)
             FROM follows
