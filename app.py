@@ -337,15 +337,34 @@ def profile():
     	""", (user_id, ))
     	posts = cursor.fetchall()
     post_count = len(posts)
+    
+    # getting followers
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM follows
+            WHERE following_id=%s
+        """, (user_id,))
+        followers_count = cursor.fetchone()[0]
+
+        # getting following
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM follows
+            WHERE follower_id=%s
+        """, (user_id,))
+        following_count = cursor.fetchone()[0]
 
     return render_template(
-    "profile.html",
-    profile=profile,
-    posts=posts,
-    post_count=post_count,
-    current_page="profile",
-    username=username,
-    user_id=user_id)
+        "profile.html",
+        profile=profile,
+        posts=posts,
+        post_count=post_count,
+        followers_count=followers_count,
+        following_count=following_count,
+        current_page="profile",
+        username=username,
+        user_id=user_id
+    )
 
 # ================== UPDATE PROFILE ==================
 @app.route("/profile/update", methods=["POST"])
@@ -476,6 +495,41 @@ def user_profile(username):
 		posts = cursor.fetchall()
 		post_count = len(posts)
 		
+		#getting followers
+		cursor.execute("""
+		SELECT COUNT(*) FROM follows
+		WHERE following_id=%s
+		""", (user_id, ))
+		followers_count = cursor.fetchone()[0]
+		
+		#getting following
+		cursor.execute("""
+		SELECT COUNT(*) FROM follows
+		WHERE follower_id=%s
+		""", (user_id, ))
+		following_count = cursor.fetchone()[0]
+		
+		#check if current user already follows
+		cursor.execute("""
+		SELECT id FROM users WHERE username=%s
+		""", (current_username, ))
+		current_user = cursor.fetchone()
+		current_user_id = current_user[0]
+		
+		cursor.execute("""
+		SELECT *
+		FROM follows
+		WHERE follower_id=%s AND following_id=%s
+		""", (current_user_id, user_id))
+		is_following = cursor.fetchone() is not None
+		
+		cursor.execute("""
+		SELECT 1
+		FROM follows
+		WHERE follower_id=%s AND following_id=%s
+		""", (user_id, current_user_id))
+		follows_me = cursor.fetchone() is not None
+		
 	return render_template(
 	"user_profile.html",
 	profile=profile,
@@ -483,8 +537,13 @@ def user_profile(username):
 	profile_username=profile_username,
 	username=current_username,
 	user_id=user_id,
+	session_user_id=current_user_id,
 	post_count=post_count,
-	is_owner=(current_username == username)
+	is_owner=(current_username == username),
+	followers_count=followers_count,
+	following_count=following_count,
+	is_following=is_following,
+	follows_me=follows_me
 	)
 
 @app.route("/create-post", methods=["GET", "POST"])
@@ -1114,6 +1173,146 @@ def handle_send_message(data):
 	"receiver_id": receiver_id,
 	"message": message
 	}, broadcast=True)
+
+@app.route("/follow/<int:user_id>", methods=["POST"])
+def follow_user(user_id):
+	if "user" not in session:
+		return jsonify({
+		"error": "login required"
+		}), 403
+		
+	username = session["user"]
+	
+	with get_connectoin() as conn:
+		cursor = conn.cursor()
+		
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		current_user = cursor.fetchone()
+		current_user_id = current_user[0]
+		
+		if current_user_id == user_id:
+			return jsonify({"error": "cannot follow yourself"})
+			
+		cursor.execute("""
+		SELECT *
+		FROM follows
+		WHERE
+		follower_id=%s AND following_id=%s
+		""", (current_user_id, user_id))
+		
+		existing = cursor.fetchone()
+		
+		if existing:			
+			#Removing following
+			cursor.execute("""
+			DELETE FROM follows WHERE follower_id=%s AND following_id=%s
+			""", (current_user_id, user_id))			
+			following = False
+		
+		else:			
+			#Add following
+			cursor.execute("""
+			INSERT INTO follows(follower_id, following_id)
+			VALUES(%s, %s)
+			""", (current_user_id, user_id))			
+			following = True
+			
+		conn.commit()
+		
+		cursor.execute("""
+		SELECT COUNT(*) FROM follows
+		WHERE following_id=%s
+		""", (user_id, ))
+		followers_count = cursor.fetchone()[0]
+		
+	return jsonify({
+	"following": following,
+	"followers": followers_count
+	})
+			
+
+@app.route("/connections/<int:user_id>/<string:mode>")
+def get_connections(user_id, mode):
+	if "user" not in session:
+		return jsonify([])
+	
+	username = session["user"]
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		current_user = cursor.fetchone()
+		current_user_id = current_user[0]
+		
+		if mode == "followers":
+			
+			cursor.execute("""
+			SELECT
+			users.id,
+			users.username,
+			profiles.profile_pic,
+			
+			EXISTS(
+			SELECT 1
+			FROM follows f2
+			WHERE f2.follower_id=%s
+			AND f2.following_id=users.id
+			) as is_following,
+			
+			EXISTS(
+			SELECT 1
+			FROM follows f3
+			WHERE f3.follower_id=users.id
+			AND f3.following_id=%s
+			) as follows_me
+			
+			FROM follows
+						
+			JOIN users
+			ON follows.follower_id = users.id
+			
+			LEFT JOIN profiles
+			ON users.id = profiles.user_id
+			
+			WHERE follows.following_id=%s
+			""", (current_user_id,current_user_id, user_id))
+		
+		else:
+			cursor.execute("""
+			SELECT
+			users.id,
+			users.username,
+			profiles.profile_pic,
+			
+			EXISTS(
+			SELECT 1
+			FROM follows f2
+			WHERE f2.follower_id=%s
+			AND f2.following_id=users.id
+			) as is_following,
+			
+			EXISTS(
+			SELECT 1
+			FROM follows f3
+			WHERE f3.follower_id=users.id
+			AND f3.following_id=%s
+			) as follows_me
+						
+			FROM follows
+			
+			JOIN users
+			ON follows.following_id = users.id
+			
+			LEFT JOIN profiles
+			ON users.id = profiles.user_id
+			
+			WHERE follows.follower_id=%s
+			""", (current_user_id,current_user_id, user_id))
+		
+		users = cursor.fetchall()
+		
+	return jsonify(users)
 
 
 # ================== RUN ==================
