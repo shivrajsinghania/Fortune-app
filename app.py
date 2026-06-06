@@ -1197,7 +1197,7 @@ def follow_user(user_id):
 		
 	username = session["user"]
 	
-	with get_connectoin() as conn:
+	with get_connection() as conn:
 		cursor = conn.cursor()
 		
 		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
