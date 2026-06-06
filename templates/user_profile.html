@@ -6,6 +6,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/followBtn.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/connections.css') }}">
   <style>
     * {
       margin: 0;
@@ -65,7 +67,21 @@
 
           <!-- ACTIONS — vertical left column -->
           <div class="actions">
-            <button class="btn primary">Follow</button>
+            <button
+            id="followBtn"
+            data-follows-me="{{ 1 if follows_me else 0 }}"
+            class="follow-btn {% if is_following %}following{% endif %}"
+            onclick="toggleFollow({{ user_id }}, this)">
+              <span class="follow-text">
+                {% if is_following %}
+                <span class="bolt">⚡</span> Following
+                {% elif follows_me %}
+                Follow Back
+                {% else %}
+                Follow
+                {% endif %}
+              </span>
+            </button>
             <a href="/chat/{{ user_id }}" class="btn secondary">Message</a>
           </div>
 
@@ -78,12 +94,12 @@
               <span class="stat-num">{{ post_count }}</span>
               <span class="stat-label">Posts</span>
             </div>
-            <div class="stat">
-              <span class="stat-num">340</span>
+            <div class="stat" onclick="openConnections('followers')">
+              <span class="stat-num" id="followers-count">{{ followers_count }}</span>
               <span class="stat-label">Followers</span>
             </div>
-            <div class="stat">
-              <span class="stat-num">180</span>
+            <div class="stat" onclick="openConnections('following')">
+              <span class="stat-num">{{ following_count }}</span>
               <span class="stat-label">Following</span>
             </div>
           </div>
@@ -109,6 +125,13 @@
     </div>
     {% include "components/navigation.html" %}
   </main>
-  <script></script>
+  {% include "components/connections_modal.html" %}
+  <script>
+    let currentUser = {{ session_user_id }}
+    let profileUserId = {{ user_id }}
+  </script>
+  <script src="{{ url_for('static', filename='js/connections_modal.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/follow.js') }}"></script>
+  
 </body>
 </html>
