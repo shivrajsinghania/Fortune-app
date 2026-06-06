@@ -6,6 +6,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile_modal.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/connections.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/followBtn.css') }}">
   <style>
     * {
       margin: 0;
@@ -164,12 +166,12 @@
               <span class="stat-num">{{ post_count }}</span>
               <span class="stat-label">Posts</span>
             </div>
-            <div class="stat">
-              <span class="stat-num">340</span>
+            <div class="stat" onclick="openConnections('followers')">
+              <span class="stat-num">{{ followers_count }}</span>
               <span class="stat-label">Followers</span>
             </div>
-            <div class="stat">
-              <span class="stat-num">180</span>
+            <div class="stat" onclick="openConnections('following')">
+              <span class="stat-num">{{ following_count }}</span>
               <span class="stat-label">Following</span>
             </div>
           </div>
@@ -206,6 +208,7 @@
   </main>
 
   {% include "components/edit_profile_modal.html" %}
+  {% include "components/connections_modal.html" %}
 
   <!-- PROFILE UPLOAD LOADER -->
   <div id="uploadLoader" class="upload-loader">
@@ -217,6 +220,8 @@
   </div>
 
   <script>
+    let currentUser = {{ user_id }}
+    
     /* ── LOGOUT ── */
     function confirmLogout() {
       if (!confirm("Are you sure you want to logout?")) return;
@@ -259,5 +264,7 @@
   </script>
 
   <script src="{{ url_for('static', filename='js/edit_profile_modal.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/connections_modal.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/follow.js') }}"></script>
 </body>
 </html>
