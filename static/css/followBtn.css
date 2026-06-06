@@ -1,0 +1,85 @@
+/* ── FOLLOW BUTTON (profile / user_profile page) ────── */
+
+.follow-btn {
+  width: 100%;
+  height: 52px;
+
+  /* solid filled default — clearly a button, not a ghost */
+  background: #0f2744;
+  border: 1.5px solid rgba(0, 255, 204, 0.35);
+  border-radius: 14px;
+  color: #00ffcc;
+
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .3px;
+
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  transition: background .25s, border-color .25s, color .25s, box-shadow .25s;
+}
+
+/* hover — not followed yet */
+.follow-btn:not(.following):hover {
+  background: #132f52;
+  border-color: rgba(0, 255, 204, 0.6);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.15);
+}
+
+/* ── STABLE "following" state ── */
+.follow-btn.following {
+  background: #0d2b26;
+  border-color: #00e5b0;
+  color: #00e5b0;
+  box-shadow: 0 0 0 1px rgba(0,229,176,.25) inset;
+}
+
+.follow-btn.following:hover {
+  background: #102f2a;
+  border-color: #00ffcc;
+}
+
+/* ── BURST state — fires for 2s on click ── */
+.follow-btn.burst {
+  animation: lightningBurst 2s ease-out forwards;
+}
+
+@keyframes lightningBurst {
+  0%   { box-shadow: 0 0 0px  #00e5b0, 0 0 0px  rgba(0,229,176,0); border-color:#00e5b0; }
+  8%   { box-shadow: 0 0 22px #00ffcc, 0 0 55px rgba(0,255,204,.7); border-color:#00ffcc; }
+  18%  { box-shadow: 0 0 8px  #00e5b0, 0 0 18px rgba(0,229,176,.4); border-color:#00e5b0; }
+  30%  { box-shadow: 0 0 18px #00ffcc, 0 0 40px rgba(0,255,204,.5); border-color:#00ffcc; }
+  55%  { box-shadow: 0 0 6px  #00e5b0, 0 0 12px rgba(0,229,176,.3); border-color:#00e5b0; }
+  100% { box-shadow: 0 0 0px  #00e5b0, 0 0 0px  rgba(0,229,176,0); border-color:#00e5b0; }
+}
+
+/* white flash overlay */
+.follow-btn.burst::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(0,255,204,.3) 100%);
+  animation: flashFade .45s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes flashFade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* bolt icon bounce during burst */
+.follow-btn.burst .bolt {
+  display: inline-block;
+  animation: boltPop .35s cubic-bezier(.36,.07,.19,.97) forwards;
+}
+
+@keyframes boltPop {
+  0%   { transform: scale(1)    rotate(0deg); }
+  30%  { transform: scale(1.55) rotate(-12deg); }
+  60%  { transform: scale(.9)   rotate(6deg); }
+  100% { transform: scale(1)    rotate(0deg); }
+}
