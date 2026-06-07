@@ -12,24 +12,37 @@ async function toggleFollow(userId, btn) {
   if (count) count.innerText = data.followers;
 
   // Support both .follow-text (profile page span) and direct button content (modal)
-  const textEl = btn.querySelector(".follow-text") || btn;
-
+  updateFollowUI(userId, data.following);
   if (data.following) {
-    btn.classList.add("following");
-    btn.classList.remove("follow-back");
-    textEl.innerHTML = '<span class="bolt">⚡</span> Following';
     btn.classList.add("burst");
-    setTimeout(() => btn.classList.remove("burst"), 2000);
-  } else {
-    btn.classList.remove("following");
-    btn.classList.remove("burst");
-    const followsMe = btn.dataset.followsMe === "1";
-    if (followsMe) {
-      btn.classList.add("follow-back");
-      textEl.innerText = "Follow Back";
-    } else {
-      btn.classList.remove("follow-back");
-      textEl.innerText = "Follow";
-    }
+    setTimeout(() => {
+      btn.classList.remove("burst");
+    }, 2000);
   }
+}
+
+function updateFollowUI(userId, following) {
+  const buttons = document.querySelectorAll(
+    `[data-user-id="${userId}"]`
+  );
+  
+  buttons.forEach(btn => {
+    const textEl = btn.querySelector(".follow-text") || btn;
+    const followsMe = btn.dataset.followsMe === "1";
+    if (following) {
+      btn.classList.add("following");
+      btn.classList.remove("follow-back");
+
+      textEl.innerHTML = '<span class="bolt">⚡</span> Following';
+    } else {
+      btn.classList.remove("following");
+      if (followsMe) {
+        btn.classList.add("follow-back");
+        textEl.innerText = "Follow Back";
+      } else {
+        btn.classList.remove("follow-back");
+        textEl.innerText = "Follow";
+      }
+    }
+  });
 }
