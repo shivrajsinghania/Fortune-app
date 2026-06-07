@@ -663,7 +663,21 @@ def view_post(post_id, owner_id):
 		SELECT COUNT(*)
 		FROM comments
 		WHERE comments.post_id = posts.id
-		) as comment_count
+		) as comment_count,
+		
+		EXISTS(
+		SELECT 1
+		FROM follows
+		WHERE follows.follower_id = %s
+		AND follows.following_id = users.id
+		) as is_following,
+		
+		EXISTS(
+		SELECT 1
+		FROM follows
+		WHERE follows.follower_id = users.id
+		AND follows.following_id = %s
+		) as follows_me
 		
 		FROM posts
 		JOIN users
@@ -673,7 +687,7 @@ def view_post(post_id, owner_id):
 		ON profiles.user_id = users.id
 		WHERE posts.user_id = %s
 		ORDER BY posts.id DESC
-		""", (user_id, owner_id))
+		""", (user_id, user_id, user_id, owner_id))
 		
 		posts = cursor.fetchall()
 	
@@ -681,7 +695,8 @@ def view_post(post_id, owner_id):
 	"view_post.html",
 	posts=posts,
 	current_id=post_id,
-	user_id=user_id)
+	user_id=user_id
+	)
 
 @app.route("/delete-post/<int:post_id>", methods=["POST"])
 def delete_post(post_id):
@@ -777,14 +792,29 @@ def feed():
 		WHERE likes.post_id = posts.id AND likes.user_id=%s
 		) as liked_by_user,
 		(SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id) as like_count,
-		(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count
+		(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count,
+		
+		EXISTS(
+		SELECT 1
+		FROM follows
+		WHERE follows.follower_id = ?
+		AND follows.following_id = users.id
+		) as is_following,
+		
+		EXISTS(
+		SELECT 1
+		FROM follows
+		WHERE follows.follower_id = users.id
+		AND follows.following_id = ?
+		) as follows_me
+		
 		FROM posts
 		JOIN users ON posts.user_id = users.id
 		
 		LEFT JOIN profiles
 		ON profiles.user_id = users.id
 		ORDER BY posts.id DESC
-		""", (user_id, ))
+		""", (user_id, user_id, user_id))
 		posts = cursor.fetchall()
 	
 	return render_template(
