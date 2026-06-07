@@ -1,6 +1,30 @@
 <div class="post-user">
-  <img src="{{ post[7] or '/static/default.png' }}" loading="lazy" class="post-avatar">
-  <a href="/user/{{ post[6] }}" class="username-link">@{{ post[6] }}</a>
+  <div class="post-user-left">
+    <img src="{{ post[7] or '/static/default.png' }}" loading="lazy" class="post-avatar">
+    <a href="/user/{{ post[6] }}" class="username-link">{{ post[6] }}</a>
+  </div>
+  {% if post[1] == user_id %}
+  <a href="/profile" class="post-follow-btn view-btn">View</a>
+  
+  {% else %}
+  
+  <button
+  class="post-follow-btn
+  {% if post[11] %}following{% endif %}
+  {% if post[12] and not post[11] %}follow-back{% endif %}"
+  data-user-id="{{ post[1] }}"
+  data-follows-me="{{ 1 if post[12] else 0 }}"
+  onclick="toggleFollow({{ post[1] }}, this)"
+  >
+    {% if post[11] %}
+    <span class="bolt">⚡</span> Following
+    {% elif post[12] %}
+    Follow Back
+    {% else %}
+    Follow
+    {% endif %}
+  </button>
+  {% endif %}
 </div>
       <div class="image-wrapper">
         <div class="image-skeleton"></div>
@@ -42,4 +66,3 @@
         </div>
       </div>
       <p>{{ post[4] }}</p>
-      
