@@ -797,7 +797,7 @@ def feed():
 		EXISTS(
 		SELECT 1
 		FROM follows
-		WHERE follows.follower_id = ?
+		WHERE follows.follower_id = %s
 		AND follows.following_id = users.id
 		) as is_following,
 		
@@ -805,7 +805,7 @@ def feed():
 		SELECT 1
 		FROM follows
 		WHERE follows.follower_id = users.id
-		AND follows.following_id = ?
+		AND follows.following_id = %s
 		) as follows_me
 		
 		FROM posts
@@ -1363,4 +1363,3 @@ def get_connections(user_id, mode):
 port = int(os.environ.get("PORT", 5000))
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
-	
