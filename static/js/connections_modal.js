@@ -148,6 +148,7 @@ function _connRenderUsers(users, tab) {
         </div>
         <button
           class="${btnClass}"
+          data-user-id="${userId}"
           data-follows-me="${followsMe ? 1 : 0}"
           onclick="toggleFollow(${userId}, this)"
         >${btnLabel}</button>
