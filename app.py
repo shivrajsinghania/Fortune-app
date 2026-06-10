@@ -990,6 +990,8 @@ def add_comment(post_id):
 		RETURNING id
 		""", (user_id, post_id, text))
 		
+		comment_id = cursor.fetchone()[0]
+		
 		#get post owner
 		cursor.execute("""
 		SELECT user_id
@@ -1004,8 +1006,6 @@ def add_comment(post_id):
 		  receiver_id, sender_id, type, post_id, comment_text)
 		  VALUES(%s, %s, %s, %s, %s)
 		  """, (post_owner, user_id, "comment", post_id, text))
-		
-		comment_id = cursor.fetchone()[0]
 		
 		conn.commit()
 		
