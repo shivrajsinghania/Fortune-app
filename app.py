@@ -180,6 +180,28 @@ def create_follows_table():
 	conn.close()
 create_follows_table()
 
+#create notifications table
+def create_notifications_table():
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	cursor.execute("""
+	CREATE TABLE IF NOT EXISTS notifications(
+	id SERIAL PRIMARY KEY,
+	receiver_id INTEGER NOT NULL,
+	sender_id INTEGER NOT NULL,
+	type TEXT NOT NULL,
+	post_id INTEGER,
+	is_read INTEGER DEFAULT 0,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	comment_text TEXT
+	)
+	""")
+	
+	conn.commit()
+	conn.close()
+create_notifications_table()
+
 def add_user(email, username, hashed_password):
     try:
         with get_connection() as conn:
@@ -851,6 +873,29 @@ def like_post(post_id):
 		else:
 			#like
 			cursor.execute("INSERT INTO likes(user_id, post_id) VALUES(%s, %s)", (user_id, post_id))
+			
+			#getting post owner
+			cursor.execute("""
+			SELECT user_id
+			FROM posts
+			WHERE id=%s
+			""", (post_id, ))
+			post_owner = cursor.fetchone()[0]
+			
+			if post_owner != user_id:
+				cursor.execute("""
+				SELECT id
+				FROM notifications
+				WHERE receiver_id=%s AND sender_id=%s AND type='like' AND post_id=%s
+				""", (post_owner, user_id, post_id))
+				existing_notification = cursor.fetchone()
+				
+				if not existing_notification:
+					cursor.execute("""
+					INSERT INTO notifications(receiver_id, sender_id, type, post_id)
+					VALUES (%s, %s, %s, %s)
+					""", (post_owner, user_id, "like", post_id))
+			
 			liked = True
 		conn.commit()
 		
@@ -945,6 +990,21 @@ def add_comment(post_id):
 		RETURNING id
 		""", (user_id, post_id, text))
 		
+		#get post owner
+		cursor.execute("""
+		SELECT user_id
+		FROM posts
+		WHERE id=%s
+		""", (post_id,))
+		post_owner = cursor.fetchone()[0]
+		
+		if post_owner != user_id:
+		  cursor.execute("""
+		  INSERT INTO notifications(
+		  receiver_id, sender_id, type, post_id, comment_text)
+		  VALUES(%s, %s, %s, %s, %s)
+		  """, (post_owner, user_id, "comment", post_id, text))
+		
 		comment_id = cursor.fetchone()[0]
 		
 		conn.commit()
@@ -1018,6 +1078,39 @@ def like_comment(comment_id):
 			
 			#like
 			cursor.execute("INSERT INTO comment_likes(user_id, comment_id) VALUES(%s, %s)", (user_id, comment_id))
+			
+			#notifications query
+			cursor.execute("""
+			SELECT user_id, post_id
+			FROM comments
+			WHERE id=%s
+			""", (comment_id, ))
+			comment = cursor.fetchone()
+			
+			if comment:			 
+			 comment_owner = comment[0]
+			 real_post_id = comment[1]
+			 
+			 if comment_owner != user_id:
+			 	cursor.execute("""
+			 	SELECT id
+			 	FROM notifications
+			 	WHERE receiver_id=%s
+			 	AND sender_id=%s
+			 	AND type='comment_like'
+			 	AND post_id=%s
+			 	""", (comment_owner, user_id, real_post_id))
+			 	
+			 	existing_notification = cursor.fetchone()
+			 	
+			 	if not existing_notification:
+			 	       cursor.execute("""
+			 	       INSERT INTO notifications(
+			 	       receiver_id, sender_id, type, post_id
+			 	       )
+			 	       VALUES(%s, %s, %s, %s)
+			 	       """, (comment_owner, user_id, "comment_like", real_post_id))
+			
 			liked = True
 		
 		conn.commit()
@@ -1258,7 +1351,26 @@ def follow_user(user_id):
 			cursor.execute("""
 			INSERT INTO follows(follower_id, following_id)
 			VALUES(%s, %s)
-			""", (current_user_id, user_id))			
+			""", (current_user_id, user_id))
+			
+			#notifications query
+			cursor.execute("""
+			SELECT id
+			FROM notifications
+			WHERE receiver_id=%s AND sender_id=%s AND type='follow'
+			""", (user_id, current_user_id))
+			existing_notification = cursor.fetchone()
+			
+			if not existing_notification:
+				cursor.execute("""
+				INSERT INTO notifications(
+				receiver_id,
+				sender_id,
+				type
+				)
+				VALUES (%s, %s, %s)
+				""", (user_id, current_user_id, "follow"))
+			
 			following = True
 			
 		conn.commit()
@@ -1357,6 +1469,66 @@ def get_connections(user_id, mode):
 		users = cursor.fetchall()
 		
 	return jsonify(users)
+
+@app.route("/notifications-data")
+def notifications_data():
+	if "user" not in session:
+		return jsonify([])
+	
+	username = session["user"]
+	
+	with get_connection() as conn:
+		cursor = conn.cursor()
+		
+		cursor.execute("SELECT id FROM users WHERE username=%s", (username, ))
+		user = cursor.fetchone()
+		current_user_id = user[0]
+		
+		cursor.execute("""
+		SELECT
+		notifications.id,
+		users.username,
+		notifications.type,
+		notifications.created_at,
+		profiles.profile_pic,
+		notifications.sender_id,
+		notifications.post_id,
+		notifications.comment_text,
+		posts.image_url,
+		posts.user_id,
+		
+		EXISTS(
+		SELECT 1
+		FROM follows
+		WHERE follower_id = %s
+		AND following_id = notifications.sender_id
+		) as is_following_sender
+				
+		FROM notifications
+		
+		JOIN users
+		ON notifications.sender_id = users.id
+		
+		LEFT JOIN profiles
+		ON users.id = profiles.user_id
+		
+		LEFT JOIN posts
+		ON notifications.post_id = posts.id
+		
+		WHERE notifications.receiver_id=%s
+		
+		ORDER BY notifications.id DESC
+		""", (current_user_id, current_user_id))
+		notifications = cursor.fetchall()
+		
+	return jsonify(notifications)
+
+@app.route("/notifications")
+def notifications():
+	if "user" not in session:
+		return redirect("/login-page")
+		
+	return render_template("notifications.html")
 
 
 # ================== RUN ==================
